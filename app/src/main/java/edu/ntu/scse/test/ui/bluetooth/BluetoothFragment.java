@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.ntu.scse.test.MainActivity;
 import edu.ntu.scse.test.R;
 import edu.ntu.scse.test.databinding.FragmentBluetoothBinding;
 
@@ -113,22 +113,27 @@ public class BluetoothFragment extends Fragment {
                     boolean discoveryStarted = bluetoothAdapter.startDiscovery();
                     if (discoveryStarted) {
                         Log.d("Bluetooth", "Bluetooth scan started...");
+                        Toast.makeText(getContext(), "Bluetooth scan started...", Toast.LENGTH_SHORT).show();
                         // Stop discovery after 60 sec
-                        new Handler().postDelayed(new Runnable() {
-                            public void run() {
-                                if (BTUtils.checkBluetoothScanPermission(getContext())) {
-                                    if (bluetoothAdapter.isDiscovering()) {
-                                        bluetoothAdapter.cancelDiscovery();
-                                        Log.d("Bluetooth", "Bluetooth scan stopped after 1 minute.");
-                                    }
-                                }
-                            }
-                        }, 60000);
+                        //new Handler().postDelayed(new Runnable() {
+                            //public void run() {
+                              //  if (BTUtils.checkBluetoothScanPermission(getContext())) {
+                               //     if (bluetoothAdapter.isDiscovering()) {
+                                //        bluetoothAdapter.cancelDiscovery();
+                               //         Log.d("Bluetooth", "Bluetooth scan stopped after 1 minute.");
+                               //     }
+                              //  }else{
+                             //       BTUtils.requestBluetoothPermissions(getActivity());
+                              //  }
+                           // }
+                        //}, 60000);
                     } else {
                         Log.d("Bluetooth", "Could not start Bluetooth scan.");
+                        Toast.makeText(getContext(), "Could not start Bluetooth scan.", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     Log.d("Bluetooth", "Failed to start Bluetooth scan. Location permission not granted.");
+                    BTUtils.requestBluetoothPermissions(getActivity());
                 }
             }
         });
@@ -257,8 +262,9 @@ public class BluetoothFragment extends Fragment {
         }
     }
     private void connectToBluetoothDevice(String pairedDevice) {
-        bluetoothClient = new BluetoothClient(pairedDevice, getContext());
-        bluetoothClient.start();
+        MainActivity.bluetoothClient = new BluetoothClient(pairedDevice, getContext());
+        MainActivity.bluetoothClient.setOnDataReceivedListener((MainActivity)getActivity());
+        MainActivity.bluetoothClient.start();
     }
 
     @Override

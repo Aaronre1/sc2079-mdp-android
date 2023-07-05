@@ -16,6 +16,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
+import edu.ntu.scse.test.OnDataReceivedListener;
+
 public class BluetoothClient extends Thread {
 
     private static final UUID APP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -28,6 +30,8 @@ public class BluetoothClient extends Thread {
     private Context context;
     private final String pairdeviceAddress;
     private String timeStamp;
+
+    private OnDataReceivedListener onDataReceivedListener;
     public BluetoothClient(String pairdeviceAddress,Context context) {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(pairdeviceAddress);
@@ -60,6 +64,10 @@ public class BluetoothClient extends Thread {
         outputStream = tmpOut;
     }
 
+    public void setOnDataReceivedListener(OnDataReceivedListener onDataReceivedListener) {
+        this.onDataReceivedListener = onDataReceivedListener;
+    }
+
     public void run() {
         int maxRetryCount = 3; // Maximum number of retries
         int retryCount = 0; // Current retry count
@@ -74,8 +82,6 @@ public class BluetoothClient extends Thread {
         while (!isConnected) {
             while (retryCount < maxRetryCount) {
                 try {
-                    // Adding a delay of 5 seconds before each connection attempt
-                    Thread.sleep(5000);
                     socket.connect();
                     // If the connection is successful, break from the loop
                     isConnected = true;
@@ -88,10 +94,6 @@ public class BluetoothClient extends Thread {
                         cleanup();
                         return;
                     }
-                } catch (InterruptedException e) {
-                    Log.e(TAG, "Sleep interrupted", e);
-                    cleanup();
-                    return;
                 } catch (SecurityException e) {
                     Log.e(TAG, "Permission missing for socket connect", e);
                     cleanup();
@@ -115,10 +117,7 @@ public class BluetoothClient extends Thread {
             }
         }
     }
-
-
     public void sendData(String data) {
-        Log.i(TAG, "calling sendData()...");
         if (outputStream != null) {
             try {
                 outputStream.write(data.getBytes());
@@ -139,6 +138,16 @@ public class BluetoothClient extends Thread {
                 bytes = inputStream.read(buffer);
                 String received = new String(buffer, 0, bytes);
                 Log.i(TAG, "Received data: " + received);
+
+                if(onDataReceivedListener != null){
+                    ((Activity) context).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            onDataReceivedListener.onDataReceived(received);
+                        }
+                    });
+                }
+
             } catch (IOException e) {
                 Log.e(TAG, "Error occurred when receiving data", e);
                 // Try to reconnect here

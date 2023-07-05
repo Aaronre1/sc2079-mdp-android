@@ -1,64 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/home_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".ui.home.HomeFragment">
 
     <GridLayout
         android:id="@+id/gridLayout"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="4"
         android:columnCount="20"
-        android:rowCount="20"
-        app:layout_constraintBottom_toTopOf="@+id/addObstacleButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:rowCount="20">
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:background="@drawable/cell_border" />
+        <!-- Your grid layout contents here -->
+
     </GridLayout>
 
-    <Button
-        android:id="@+id/addObstacleButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Add Obstacle"
-        app:layout_constraintBottom_toTopOf="@+id/removeObstacleButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6"
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/removeObstacleButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Remove Obstacle"
-        app:layout_constraintBottom_toTopOf="@+id/placeCarButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        <!-- Buttons layout -->
+        <LinearLayout
+            android:id="@+id/buttonLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
 
-    <Button
-        android:id="@+id/placeCarButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Place Car"
-        app:layout_constraintBottom_toTopOf="@+id/rotateButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/rotateButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Rotate Car"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+                <Button
+                    android:id="@+id/addObstacleButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:text="Add Obstacle" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+                <Button
+                    android:id="@+id/removeObstacleButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:text="Remove Obstacle" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/placeCarButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:text="Place Car" />
+
+                <Button
+                    android:id="@+id/rotateButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:text="Rotate Car" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Text areas layout -->
+        <LinearLayout
+            android:id="@+id/textAreaLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/robotStatusLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot Status:"
+                android:textColor="@android:color/black"/>
+
+            <EditText
+                android:id="@+id/robotStatusTextArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.01"
+                android:gravity="top"
+                android:enabled="false"
+                android:hint="..." />
+
+            <TextView
+                android:id="@+id/sendDataLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Send Data:"
+                android:textColor="@android:color/black"/>
+
+            <EditText
+                android:id="@+id/sendDataTextArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.5"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:hint="Enter text here" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/sendDataButton"
+                    android:layout_width="70dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_height="50dp"
+                    android:textSize="10sp"
+                    android:text="Send" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/receiveDataLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Received Data:"
+                android:textColor="@android:color/black"/>
+
+            <EditText
+                android:id="@+id/receivedDataTextArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.5"
+                android:gravity="top"
+                android:enabled="false"
+                android:hint="..." />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

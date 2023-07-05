@@ -1,19 +1,28 @@
 package edu.ntu.scse.test.ui.home;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import edu.ntu.scse.test.MainActivity;
 import edu.ntu.scse.test.R;
 
 public class HomeFragment extends Fragment {
@@ -28,16 +37,22 @@ public class HomeFragment extends Fragment {
     private int selectedDirection = 0; // 0 - Up, 1 - Right, 2 - Down, 3 - Left
     private boolean addObstacleActive = false; // Track the active state of add obstacle button
     private boolean removeObstacleActive = false; // Track the active state of remove obstacle button
+    private EditText receivedDataTextArea;
+    private static final String TAG = "HomeFragment";
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_home, container, false);
+        final EditText sendDataTextArea = root.findViewById(R.id.sendDataTextArea);
+        final LinearLayout homeLayout = root.findViewById(R.id.home_layout);
         gridLayout = root.findViewById(R.id.gridLayout);
-        Button addObstacleButton = root.findViewById(R.id.addObstacleButton);
-        Button removeObstacleButton = root.findViewById(R.id.removeObstacleButton);
-        Button placeCarButton = root.findViewById(R.id.placeCarButton);
-        Button rotateButton = root.findViewById(R.id.rotateButton);
+        final Button addObstacleButton = root.findViewById(R.id.addObstacleButton);
+        final Button removeObstacleButton = root.findViewById(R.id.removeObstacleButton);
+        final Button placeCarButton = root.findViewById(R.id.placeCarButton);
+        final Button rotateButton = root.findViewById(R.id.rotateButton);
+        final Button sendDataButton = root.findViewById(R.id.sendDataButton);
+        receivedDataTextArea = root.findViewById(R.id.receivedDataTextArea);
 
         obstacles = new boolean[gridSize][gridSize];
         imageViews = new ImageView[gridSize][gridSize];
@@ -85,13 +100,13 @@ public class HomeFragment extends Fragment {
 
         gridLayout.setOnTouchListener((view, motionEvent) -> {
             if (addObstacleActive) {
-                int row = (int) (motionEvent.getY() / view.getHeight() * gridSize);
-                int col = (int) (motionEvent.getX() / view.getWidth() * gridSize);
+                int row = Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize));
+                int col = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
                 addObstacle(row, col);
                 return true;
             } else if (removeObstacleActive) {
-                int row = (int) (motionEvent.getY() / view.getHeight() * gridSize);
-                int col = (int) (motionEvent.getX() / view.getWidth() * gridSize);
+                int row = Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize));
+                int col = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
                 removeObstacle(row, col);
                 return true;
             }
@@ -100,6 +115,37 @@ public class HomeFragment extends Fragment {
 
         placeCarButton.setOnClickListener(view -> placeCar());
         rotateButton.setOnClickListener(view -> rotateCar());
+
+        // Set up touch listener for non-text box views to hide keyboard.
+        homeLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (sendDataTextArea.isFocused()) {
+                    Rect outRect = new Rect();
+                    sendDataTextArea.getGlobalVisibleRect(outRect);
+                    if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                        sendDataTextArea.clearFocus();
+                        hideKeyboardFrom(getContext(), v);
+                    }
+                }
+                return false;
+            }
+        });
+
+        sendDataButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String dataToSend = sendDataTextArea.getText().toString();
+                if (!dataToSend.isEmpty() && MainActivity.bluetoothClient != null) {
+                    MainActivity.bluetoothClient.sendData(dataToSend);
+                    Toast.makeText(getContext(), "Send Data Success...", Toast.LENGTH_SHORT).show();
+                    sendDataTextArea.getText().clear();
+                }else{
+                    Toast.makeText(getContext(), "Send Data Failed...", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
         return root;
     }
 
@@ -197,4 +243,14 @@ public class HomeFragment extends Fragment {
         selectedDirection = (selectedDirection + 1) % 4;
         Toast.makeText(getContext(), "Car direction changed", Toast.LENGTH_SHORT).show();
     }
+
+    public static void hideKeyboardFrom(Context context, View view) {
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+    public void updateReceivedData(String data){
+        Log.i(TAG,"Data >>> " +data);
+        receivedDataTextArea.setText(data);
+    }
+
 }

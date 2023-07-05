@@ -1,21 +1,29 @@
 package edu.ntu.scse.test;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import edu.ntu.scse.test.databinding.ActivityMainBinding;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+import edu.ntu.scse.test.databinding.ActivityMainBinding;
+import edu.ntu.scse.test.ui.bluetooth.BluetoothClient;
+import edu.ntu.scse.test.ui.home.HomeFragment;
+
+public class MainActivity extends AppCompatActivity implements OnDataReceivedListener {
 
     private ActivityMainBinding binding;
-
+    public static BluetoothClient bluetoothClient;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,4 +42,25 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.navView, navController);
     }
 
+    @Override
+    public void onDataReceived(String data) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        List<Fragment> fragments = fragmentManager.getFragments();
+        if(fragments != null) {
+            for (Fragment fragment : fragments) {
+                if (fragment != null && fragment instanceof NavHostFragment) {
+                    FragmentManager childFragmentManager = fragment.getChildFragmentManager();
+                    List<Fragment> childFragments = childFragmentManager.getFragments();
+                    if (childFragments != null) {
+                        for (Fragment childFragment : childFragments) {
+                            if (childFragment != null && childFragment.isVisible() && childFragment instanceof HomeFragment) {
+                                ((HomeFragment) childFragment).updateReceivedData(data);
+                                Log.i("CurrentFragment", "Data updated in HomeFragment");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
