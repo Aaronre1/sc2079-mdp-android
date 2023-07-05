@@ -12,25 +12,32 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
 public class BluetoothClient extends Thread {
 
     private static final UUID APP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private final BluetoothSocket socket;
-    private final InputStream inputStream;
-    private final OutputStream outputStream;
+    private static final String TAG = "BluetoothClient";
+    private BluetoothSocket socket;
+    private InputStream inputStream;
+    private OutputStream outputStream;
     private ProgressDialog progressDialog;
-
     private final BluetoothAdapter bluetoothAdapter;
-    Context context;
+    private Context context;
+    private final String pairdeviceAddress;
+    private String timeStamp;
     public BluetoothClient(String pairdeviceAddress,Context context) {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(pairdeviceAddress);
         this.context = context;
+        this.pairdeviceAddress = pairdeviceAddress;
         BluetoothSocket tmpSocket = null;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
+        // Get the current timestamp
+        timeStamp = new SimpleDateFormat("dd/MM/yyyy HH.mm.ss").format(new Date());
 
         progressDialog = new ProgressDialog(context);
         progressDialog.setTitle("Connecting");
@@ -43,19 +50,20 @@ public class BluetoothClient extends Thread {
             tmpIn = tmpSocket.getInputStream();
             tmpOut = tmpSocket.getOutputStream();
         } catch (IOException e) {
-            Log.e("BluetoothClient", "Socket's create() method failed", e);
+            Log.e(TAG, "Socket's create() method failed", e);
         }catch (SecurityException e) {
-            Log.e("BluetoothClient", "Permission missing for createRfcommSocketToServiceRecord", e);
+            Log.e(TAG, "Permission missing for createRfcommSocketToServiceRecord", e);
         }
-        Log.d("BluetoothClient", "tmpSocket>>> "+ tmpSocket);
+        Log.i(TAG, "tmpSocket>>> "+ tmpSocket);
         socket = tmpSocket;
         inputStream = tmpIn;
         outputStream = tmpOut;
     }
 
     public void run() {
-        int maxRetryCount = 2; // Maximum number of retries
+        int maxRetryCount = 3; // Maximum number of retries
         int retryCount = 0; // Current retry count
+        boolean isConnected = false;
 
         ((Activity) context).runOnUiThread(new Runnable() {
             public void run() {
@@ -63,59 +71,60 @@ public class BluetoothClient extends Thread {
             }
         });
 
-        while (retryCount < maxRetryCount) {
-            try {
-                // Adding a delay of 5 seconds before each connection attempt
-                Thread.sleep(50000);
-                socket.connect();
-                // If the connection is successful, break from the loop
-                break;
-            } catch (IOException connectException) {
-                retryCount++; // Increment the retry count
-                Log.e("BluetoothClient", "Could not connect the client socket. Attempt " + retryCount, connectException);
-                // If the maximum retry count is reached, clean up the resources and stop the thread
-                if (retryCount == maxRetryCount) {
+        while (!isConnected) {
+            while (retryCount < maxRetryCount) {
+                try {
+                    // Adding a delay of 5 seconds before each connection attempt
+                    Thread.sleep(5000);
+                    socket.connect();
+                    // If the connection is successful, break from the loop
+                    isConnected = true;
+                    break;
+                } catch (IOException connectException) {
+                    retryCount++; // Increment the retry count
+                    Log.e(TAG, "Could not connect the client socket. Attempt " + retryCount, connectException);
+                    // If the maximum retry count is reached, clean up the resources and stop the thread
+                    if (retryCount == maxRetryCount) {
+                        cleanup();
+                        return;
+                    }
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "Sleep interrupted", e);
+                    cleanup();
+                    return;
+                } catch (SecurityException e) {
+                    Log.e(TAG, "Permission missing for socket connect", e);
                     cleanup();
                     return;
                 }
-            } catch (InterruptedException e) {
-                Log.e("BluetoothClient", "Sleep interrupted", e);
-                cleanup();
-                return;
-            } catch (SecurityException e) {
-                Log.e("BluetoothClient", "Permission missing for socket connect", e);
-                cleanup();
-                return;
-            }
-        }
-
-        ((Activity) context).runOnUiThread(new Runnable() {
-            public void run() {
-                progressDialog.dismiss(); // Dismiss the ProgressDialog
-                Toast.makeText(context, "Connection established", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        if (socket.isConnected()) {
-            for(int i =0;i<10;i++){
-                sendData("Test String: "  + i);
             }
 
-            receiveData();
+            ((Activity) context).runOnUiThread(new Runnable() {
+                public void run() {
+                    progressDialog.dismiss(); // Dismiss the ProgressDialog
+                    Toast.makeText(context, "Connection established", Toast.LENGTH_SHORT).show();
+                }
+            });
 
-        } else {
-            cleanup();
+            Log.i(TAG, "socket >>> " + socket);
+
+            if (isConnected) {
+                sendData("Test String: " + timeStamp);
+
+                receiveData();
+            }
         }
     }
 
+
     public void sendData(String data) {
-        Log.i("BluetoothClient", "calling sendData()...");
+        Log.i(TAG, "calling sendData()...");
         if (outputStream != null) {
             try {
                 outputStream.write(data.getBytes());
-                Log.i("BluetoothClient", "Data sent: " + data);
+                Log.i(TAG, "Data sent: " + data);
             } catch (IOException e) {
-                Log.e("BluetoothClient", "Error occurred when sending data", e);
+                Log.e(TAG, "Error occurred when sending data", e);
             }
         }
     }
@@ -129,13 +138,73 @@ public class BluetoothClient extends Thread {
                 // Read from the InputStream
                 bytes = inputStream.read(buffer);
                 String received = new String(buffer, 0, bytes);
-                Log.i("BluetoothClient", "Received data: " + received);
+                Log.i(TAG, "Received data: " + received);
             } catch (IOException e) {
-                Log.e("BluetoothClient", "Error occurred when receiving data", e);
-                break;
+                Log.e(TAG, "Error occurred when receiving data", e);
+                // Try to reconnect here
+                Log.i(TAG, "Connection lost, attempting to reconnect...");
+                reconnect();
             }
         }
     }
+    public void reconnect() {
+        cleanup();
+        int maxRetryCount = 2; // Maximum number of retries
+        int retryCount = 0; // Current retry count
+
+        while (retryCount < maxRetryCount) {
+            try {
+                Thread.sleep(3000); // delay 3 seconds before reconnection attempt
+                if (!BTUtils.checkBluetoothConnectionPermission(context)) {
+                    BTUtils.requestBluetoothPermissions((Activity) context);
+                }
+                BluetoothDevice device = bluetoothAdapter.getRemoteDevice(pairdeviceAddress);
+                Log.i(TAG,"Reconnect pairdeviceAddress: " + pairdeviceAddress);
+                socket = device.createRfcommSocketToServiceRecord(APP_UUID);
+                socket.connect();
+
+                ((Activity) context).runOnUiThread(new Runnable() {
+                    public void run() {
+                        progressDialog.show();
+                    }
+                });
+
+                if(socket.isConnected()) {
+                    ((Activity) context).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(context, "Reconnected successfully", Toast.LENGTH_SHORT).show();
+                            progressDialog.dismiss();  //dismiss progressDialog here
+                        }
+                    });
+                    inputStream = socket.getInputStream();
+                    outputStream = socket.getOutputStream();
+
+                    // Update the timestamp here
+                    timeStamp = new SimpleDateFormat("dd/MM/yyyy HH.mm.ss").format(new Date());
+
+                    sendData("reconnected: " + timeStamp);
+                    Log.i(TAG,"reconnected send data: " +timeStamp);
+                }
+                break;
+            } catch (IOException e) {
+                retryCount++;
+                Log.e(TAG, "Couldn't reconnect on attempt " + retryCount, e);
+                if (retryCount == maxRetryCount) {
+                    // Handle the case when all retries fail here. For example, you can show a Toast message to inform the user.
+                    ((Activity) context).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(context, "Unable to reconnect after " + maxRetryCount + " attempts", Toast.LENGTH_SHORT).show();
+                            progressDialog.dismiss();  //dismiss progressDialog here
+                        }
+                    });
+                    return; // Stop trying to reconnect
+                }
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Sleep interrupted", e);
+            }
+        }
+    }
+
     public void stopClient() {
         cleanup();
     }
@@ -148,20 +217,11 @@ public class BluetoothClient extends Thread {
             }
         });
 
-        if (socket != null) {
-            try {
-                socket.close();
-                Log.i("BluetoothClient", "Client socket closed");
-            } catch (IOException e) {
-                Log.e("BluetoothClient", "Could not close the client socket", e);
-            }
-        }
-
         if (inputStream != null) {
             try {
                 inputStream.close();
             } catch (IOException e) {
-                Log.e("BluetoothClient", "Could not close the input stream", e);
+                Log.e(TAG, "Could not close the input stream", e);
             }
         }
 
@@ -169,7 +229,16 @@ public class BluetoothClient extends Thread {
             try {
                 outputStream.close();
             } catch (IOException e) {
-                Log.e("BluetoothClient", "Could not close the output stream", e);
+                Log.e(TAG, "Could not close the output stream", e);
+            }
+        }
+
+        if (socket != null) {
+            try {
+                socket.close();
+                Log.i(TAG, "Client socket closed");
+            } catch (IOException e) {
+                Log.e(TAG, "Could not close the client socket", e);
             }
         }
     }

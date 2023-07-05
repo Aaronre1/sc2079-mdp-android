@@ -3,7 +3,6 @@ package edu.ntu.scse.test.ui.bluetooth;
 import static android.app.Activity.RESULT_OK;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -82,7 +81,7 @@ public class BluetoothFragment extends Fragment {
         }
 
         // Check if we have the location permission, and if not, request it
-        if (BTUtils.checkLocationPermission(getContext())) {
+        if (!BTUtils.checkLocationPermission(getContext())) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_PERMISSION_LOCATION);
         }
 
@@ -144,6 +143,8 @@ public class BluetoothFragment extends Fragment {
 
                 if(BTUtils.checkBluetoothConnectionPermission(getContext())){
                     Log.d("permission","permission granted");
+                }else{
+                    BTUtils.requestBluetoothPermissions(getActivity());
                 }
                 // Get the device MAC address which is the last 17 chars in the View
                 String info = ((TextView) view).getText().toString();
@@ -175,9 +176,6 @@ public class BluetoothFragment extends Fragment {
                         bluetoothAdapter.cancelDiscovery();
                     }
                     Toast.makeText(getContext(), "Device already paired...", Toast.LENGTH_SHORT).show();
-                    if (bluetoothClient != null) {
-                        bluetoothClient.stopClient();
-                    }
                     Log.d("pairedDevice","pairedDevice >>> " +pairedDevice);
                     Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
                     if (pairedDevices.contains(pairedDevice)) {
@@ -259,9 +257,6 @@ public class BluetoothFragment extends Fragment {
         }
     }
     private void connectToBluetoothDevice(String pairedDevice) {
-        if (bluetoothClient != null) {
-            bluetoothClient.stopClient();
-        }
         bluetoothClient = new BluetoothClient(pairedDevice, getContext());
         bluetoothClient.start();
     }
