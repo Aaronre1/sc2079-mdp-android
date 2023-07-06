@@ -5,6 +5,7 @@ import android.content.ClipDescription;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.DragEvent;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,7 +63,7 @@ public class MapFragment extends Fragment {
                 params.rowSpec = GridLayout.spec(i, 1, 1f);
                 view.setLayoutParams(params);
                 view.setBackgroundColor(Color.WHITE);
-                view.setPadding(5,5,5,5);
+                view.setGravity(Gravity.CENTER);
                 view.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.cell_border));
                 gridLayout.addView(view);
 
