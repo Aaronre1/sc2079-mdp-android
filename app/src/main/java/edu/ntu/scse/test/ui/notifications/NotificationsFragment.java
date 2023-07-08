@@ -1,12 +1,10 @@
 package edu.ntu.scse.test.ui.notifications;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,8 +14,6 @@ import androidx.lifecycle.ViewModelProvider;
 import edu.ntu.scse.test.R;
 import edu.ntu.scse.test.databinding.FragmentNotificationsBinding;
 import edu.ntu.scse.test.ui.home.modal.GridSystem;
-import edu.ntu.scse.test.ui.home.modal.Obstacle;
-import edu.ntu.scse.test.ui.home.modal.Robot;
 
 public class NotificationsFragment extends Fragment {
     private TableLayout tableLayout;
@@ -38,10 +34,11 @@ public class NotificationsFragment extends Fragment {
         tableLayout = root.findViewById(R.id.gridSystem);
         gridSystem = new GridSystem();  // assuming you've defined GridSystem
 
-        populateGrid();
+        //populateGrid();
 
         return root;
     }
+    /*
     private void populateGrid() {
         int[][] grids = gridSystem.getGrids();
 
@@ -110,7 +107,7 @@ public class NotificationsFragment extends Fragment {
         obstacle.rotateObstacle(clockwise);
         // Update the obstacle's image or custom view according to the new facing direction
     }
-
+*/
     @Override
     public void onDestroyView() {
         super.onDestroyView();

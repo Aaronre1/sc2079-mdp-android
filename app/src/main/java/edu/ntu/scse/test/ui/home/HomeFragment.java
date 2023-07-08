@@ -22,23 +22,26 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import java.util.ArrayList;
+
 import edu.ntu.scse.test.MainActivity;
 import edu.ntu.scse.test.R;
+import edu.ntu.scse.test.ui.home.modal.Car;
+import edu.ntu.scse.test.ui.home.modal.Obstacle;
 
 public class HomeFragment extends Fragment {
 
     private GridLayout gridLayout;
-    private int gridSize = 20;
-    private boolean[][] obstacles;
+    private int gridSize = 20, obstaclesSize = 0;
     private ImageView[][] imageViews;
-    private ImageView[][] carImageViews = new ImageView[3][3];
-    private int[] carCoordinates = new int[2];
     private ImageView carImageView;
-    private int selectedDirection = 0; // 0 - Up, 1 - Right, 2 - Down, 3 - Left
-    private boolean addObstacleActive = false; // Track the active state of add obstacle button
-    private boolean removeObstacleActive = false; // Track the active state of remove obstacle button
-    private EditText receivedDataTextArea;
+    private boolean placeCarActive = false, addObstacleActive = false, removeObstacleActive = false,
+            dragObstacleActive = false, rotateObstacleActive = false;
+    private EditText receivedDataTextArea, statusTextArea;
     private static final String TAG = "HomeFragment";
+    private ArrayList<Obstacle> obstacles;
+    private Obstacle currentObstacle = null;
+    private Car myCar;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -52,16 +55,19 @@ public class HomeFragment extends Fragment {
         final Button placeCarButton = root.findViewById(R.id.placeCarButton);
         final Button rotateButton = root.findViewById(R.id.rotateButton);
         final Button sendDataButton = root.findViewById(R.id.sendDataButton);
+        final Button dragObstacleButton = root.findViewById(R.id.dragObstacleButton);
+        final ImageView upArrowButton = root.findViewById(R.id.upArrow);
+        final ImageView downArrowButton = root.findViewById(R.id.downArrow);
+        final ImageView leftArrowButton = root.findViewById(R.id.leftArrow);
+        final ImageView rightArrowButton = root.findViewById(R.id.rightArrow);
+
         receivedDataTextArea = root.findViewById(R.id.receivedDataTextArea);
+        statusTextArea = root.findViewById(R.id.robotStatusTextArea);
 
-        obstacles = new boolean[gridSize][gridSize];
+        obstacles = new ArrayList<>();
         imageViews = new ImageView[gridSize][gridSize];
-
         gridLayout.setColumnCount(gridSize);
         gridLayout.setRowCount(gridSize);
-
-        // Set GridLayout background color to black
-        gridLayout.setBackgroundColor(Color.BLACK);
 
         for (int i = 0; i < gridSize; i++) {
             for (int j = 0; j < gridSize; j++) {
@@ -73,7 +79,7 @@ public class HomeFragment extends Fragment {
                 params.rowSpec = GridLayout.spec(i, 1, 1f);
                 imageView.setLayoutParams(params);
                 imageView.setBackgroundColor(Color.WHITE);
-                imageView.setPadding(5, 5, 5, 5);
+                imageView.setPadding(0, 1, 0, 1);
                 imageView.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.cell_border));
                 imageViews[i][j] = imageView;
                 gridLayout.addView(imageView);
@@ -81,40 +87,167 @@ public class HomeFragment extends Fragment {
         }
 
         addObstacleButton.setOnClickListener(view -> {
-            if(!removeObstacleActive){
+            if(!removeObstacleActive && !dragObstacleActive && !placeCarActive && !rotateObstacleActive){
                 addObstacleActive = !addObstacleActive;
                 updateButtonState(addObstacleButton, addObstacleActive);
             }else{
-                Toast.makeText(getContext(), "Remove Obstacle is in Active state", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Only one button is allowed to be active.", Toast.LENGTH_SHORT).show();
             }
 
         });
+
+        dragObstacleButton.setOnClickListener(view -> {
+            if(!removeObstacleActive && !addObstacleActive && !placeCarActive && !rotateObstacleActive) {
+                dragObstacleActive = !dragObstacleActive;
+                updateButtonState(dragObstacleButton, dragObstacleActive);
+            }else{
+                Toast.makeText(getContext(), "Only one button is allowed to be active.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         removeObstacleButton.setOnClickListener(view -> {
-            if(!addObstacleActive) {
+            if(!addObstacleActive && !dragObstacleActive && !placeCarActive && !rotateObstacleActive) {
                 removeObstacleActive = !removeObstacleActive;
                 updateButtonState(removeObstacleButton, removeObstacleActive);
             }else{
-                Toast.makeText(getContext(), "Add obstacles is in Active state", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Only one button is allowed to be active.", Toast.LENGTH_SHORT).show();
             }
         });
 
+        rotateButton.setOnClickListener(view -> {
+            if(!removeObstacleActive && !addObstacleActive && !dragObstacleActive && !placeCarActive){
+                rotateObstacleActive = !rotateObstacleActive;
+                updateButtonState(rotateButton, rotateObstacleActive);
+            }else{
+                Toast.makeText(getContext(), "Only one button is allowed to be active.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        placeCarButton.setOnClickListener(view -> {
+            if (!removeObstacleActive && !addObstacleActive && !dragObstacleActive && !rotateObstacleActive) {
+                placeCarActive = !placeCarActive;
+                updateButtonState(placeCarButton, placeCarActive);
+            } else {
+                Toast.makeText(getContext(), "Only one button is allowed to be active.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        upArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null){
+                MainActivity.bluetoothClient.sendData("Arrow Up");
+            }
+            moveCarUp();
+        });
+        downArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null) {
+                MainActivity.bluetoothClient.sendData("Arrow Down");
+            }
+            moveCarDown();
+        });
+        leftArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null){
+                MainActivity.bluetoothClient.sendData("Arrow Left");
+            }
+            moveCarLeft();
+        });
+        rightArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null){
+                MainActivity.bluetoothClient.sendData("Arrow Right");
+            }
+            moveCarRight();
+        });
+
+
         gridLayout.setOnTouchListener((view, motionEvent) -> {
-            if (addObstacleActive) {
-                int row = Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize));
-                int col = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
-                addObstacle(row, col);
-                return true;
-            } else if (removeObstacleActive) {
-                int row = Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize));
-                int col = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
-                removeObstacle(row, col);
-                return true;
+            int row = Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize));
+            int col = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
+            if(row >= 0 && col >= 0) {
+                switch (motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        if (addObstacleActive) {
+                            if (isCellOccupiedByCar(row, col)) {
+                                Toast.makeText(getContext(), "This cell is occupied by the car.", Toast.LENGTH_SHORT).show();
+                                return true;
+                            }
+                            Obstacle obstacle = new Obstacle(row, col, obstaclesSize, Obstacle.NORTH);
+                            obstacles.add(obstacle);
+                            imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle", obstacle.getDirection()));
+                            obstaclesSize = obstaclesSize + 1;
+                            Log.i(TAG, "Obstacle size after add: " + obstaclesSize);
+                            return true;
+                        } else if (removeObstacleActive) {
+                            removeObstacle(row, col);
+                            return true;
+                        } else if (dragObstacleActive) {
+                            Obstacle obstacle = getObstacleAt(row, col);
+                            if (obstacle != null) {
+                                currentObstacle = obstacle;
+                                currentObstacle.isBeingDragged = true;
+                            }
+                            return true;
+                        }else if (rotateObstacleActive) {
+                            Obstacle obstacle = getObstacleAt(row, col);
+                            if (obstacle != null) {
+                                rotateObstacle(obstacle);
+                            }
+                            if (myCar != null && row >= myCar.getRow() && row < myCar.getRow() + 3 && col >= myCar.getCol() && col < myCar.getCol() + 3) {
+                                rotateCar();
+                                return true;
+                            }
+                            return true;
+                        } else if (placeCarActive) {
+                            placeCar(row, col, 0);//set default to north
+                            return true;
+                        }
+
+                    case MotionEvent.ACTION_MOVE:
+                        if (dragObstacleActive && currentObstacle != null && !isOutsideGrid(currentObstacle)) {
+
+                            if (isCellOccupiedByCar(row, col)) {
+                                Toast.makeText(getContext(), "This cell is occupied by the car.", Toast.LENGTH_SHORT).show();
+                                return true;
+                            }
+                            // remove previous obstacle image
+                            imageViews[currentObstacle.getRow()][currentObstacle.getCol()].setImageResource(0);
+
+                            // check if new cell is occupied by another obstacle
+                            Obstacle nextObstacle = getObstacleAt(row, col);
+                            if(nextObstacle == null || nextObstacle == currentObstacle) {
+                                // update obstacle position
+                                currentObstacle.setRow(row);
+                                currentObstacle.setCol(col);
+                                if(isOutsideGrid(currentObstacle)) {
+                                    removeObstacle(currentObstacle.getRow(), currentObstacle.getCol());
+                                    Toast.makeText(getContext(), "Obstacle removed as it was dragged outside", Toast.LENGTH_SHORT).show();
+                                    currentObstacle = null;
+                                } else {
+                                    imageViews[currentObstacle.getRow()][currentObstacle.getCol()].setImageResource(getDrawableForDirection("obstacle",currentObstacle.getDirection()));
+                                }
+                            } else {
+                                Toast.makeText(getContext(), "This cell is occupied by another obstacle.", Toast.LENGTH_SHORT).show();
+                            }
+                            return true;
+                        }
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        if (dragObstacleActive && currentObstacle != null) {
+                            if (isOutsideGrid(currentObstacle)) {
+                                removeObstacle(currentObstacle.getRow(), currentObstacle.getCol());
+                                currentObstacle = null;
+                                Toast.makeText(getContext(), "Obstacle removed as it was released outside", Toast.LENGTH_SHORT).show();
+                            }
+                            if (currentObstacle != null) {
+                                currentObstacle.isBeingDragged = false;
+                                currentObstacle = null;
+                            }
+                        }
+                        Log.i(TAG, "Last position: (" + row + "," + col + ")");
+                        return true;
+                }
             }
             return false;
         });
 
-        placeCarButton.setOnClickListener(view -> placeCar());
-        rotateButton.setOnClickListener(view -> rotateCar());
 
         // Set up touch listener for non-text box views to hide keyboard.
         homeLayout.setOnTouchListener(new View.OnTouchListener() {
@@ -148,29 +281,103 @@ public class HomeFragment extends Fragment {
 
         return root;
     }
-
-    private void addObstacle(int row, int col) {
-        if (obstacles[row][col]) {
-            Toast.makeText(getContext(), "Obstacle already exists at (" + row + ", " + col + ")", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        obstacles[row][col] = true;
-        imageViews[row][col].setSelected(true); // sets the obstacle color
-        Toast.makeText(getContext(), "Obstacle added at (" + row + ", " + col + ")", Toast.LENGTH_SHORT).show();
+    private boolean isOutsideGrid(Obstacle obstacle) {
+        return obstacle.getRow() < 0 || obstacle.getCol() < 0 || obstacle.getRow() >= gridSize || obstacle.getCol() >= gridSize;
     }
-
+    private Obstacle getObstacleAt(int row, int col) {
+        for (Obstacle obstacle : obstacles) {
+            if (obstacle.getRow() == row && obstacle.getCol() == col) {
+                return obstacle;
+            }
+        }
+        return null;
+    }
     private void removeObstacle(int row, int col) {
-        if (!obstacles[row][col]) {
-            Toast.makeText(getContext(), "No obstacle exists at (" + row + ", " + col + ")", Toast.LENGTH_SHORT).show();
-            return;
+        Obstacle obstacle = getObstacleAt(row, col);
+        if (obstacle != null) {
+            obstaclesSize = obstaclesSize -1;
+            Log.i(TAG,"Obstacle size after remove: " +obstaclesSize);
+            obstacles.remove(obstacle);
+            imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(0); //remove
+        }
+    }
+    private int getDrawableForDirection(String obj, int direction) {
+        if(obj.equalsIgnoreCase("obstacle")){
+            switch (direction) {
+                case Obstacle.NORTH:
+                    return R.drawable.obstacle_north;
+                case Obstacle.EAST:
+                    return R.drawable.obstacle_east;
+                case Obstacle.SOUTH:
+                    return R.drawable.obstacle_south;
+                case Obstacle.WEST:
+                    return R.drawable.obstacle_west;
+                default:
+                    return R.drawable.cell_border;
+            }
+        }else{
+            switch (direction) {
+                case Car.EAST:
+                    return R.drawable.car_east;
+                case Car.SOUTH:
+                    return R.drawable.car_south;
+                case Car.WEST:
+                    return R.drawable.car_west;
+                default:
+                    return R.drawable.car_north;
+            }
         }
 
-        obstacles[row][col] = false;
-        imageViews[row][col].setSelected(false); // sets the default color
-        Toast.makeText(getContext(), "Obstacle removed at (" + row + ", " + col + ")", Toast.LENGTH_SHORT).show();
     }
+    private void rotateObstacle(Obstacle obstacle) {
+        obstacle.rotate();
+        imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle",obstacle.getDirection()));
+    }
+    private void placeCar(int row, int col, int direction) {
+        // Check if the car fits in the grid.
+        if (row + 2 >= gridSize || col + 2 >= gridSize) {
+            Toast.makeText(getContext(), "The car cannot be placed here.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Check if there are obstacles on the way.
+        for (int i = row; i < row + 3; i++) {
+            for (int j = col; j < col + 3; j++) {
+                Obstacle obstacle = getObstacleAt(i, j);
+                if (obstacle != null) {
+                    Toast.makeText(getContext(), "The car cannot be placed on an obstacle.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+        }
+        // Create a new car view with the car drawable.
+        ImageView carView = new ImageView(getContext());
+        myCar = new Car(row, col, direction); //Initialize, direction default North
+        carView.setImageResource(getDrawableForDirection("car",myCar.getDirection()));
+        carView.setBackgroundResource(R.drawable.cell_border); // add cell border drawable as the background resource
 
+        // Set the layout parameters of the car view to span 3 cells.
+        GridLayout.LayoutParams carLayoutParams = new GridLayout.LayoutParams();
+        carLayoutParams.width = 0;
+        carLayoutParams.height = 0;
+        carLayoutParams.columnSpec = GridLayout.spec(col, 3, 1f);
+        carLayoutParams.rowSpec = GridLayout.spec(row, 3, 1f);
+        carView.setLayoutParams(carLayoutParams);
+        // Remove old car view from the grid if it exists.
+        if (carImageView != null) {
+            gridLayout.removeView(carImageView);
+        }
+        // Add the car view to the grid layout.
+        gridLayout.addView(carView);
+        // Save the car view.
+        carImageView = carView;
+        // Update car coordinates and direction
+        myCar.setRow(row);
+        myCar.setCol(col);
+    }
+    private void rotateCar() {
+        myCar.rotate();
+        carImageView.setImageResource(getDrawableForDirection("car", myCar.getDirection()));
+    }
     private void updateButtonState(Button button, boolean isActive) {
         if (isActive) {
             button.setBackgroundColor(Color.LTGRAY);
@@ -178,79 +385,111 @@ public class HomeFragment extends Fragment {
             button.setBackgroundColor(Color.BLUE);
         }
     }
-
-    private void placeCar() {
-        if (carImageViews[0][0] != null) {
-            Toast.makeText(getContext(), "Car already placed", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        outerloop:
-        for (int i = 0; i < gridSize - 2; i++) {
-            for (int j = 0; j < gridSize - 2; j++) {
-                // Check for 3x3 free cells
-                boolean freeCells = true;
-                for (int k = 0; k < 3; k++) {
-                    for (int l = 0; l < 3; l++) {
-                        if (obstacles[i + k][j + l]) {
-                            freeCells = false;
-                            break;
-                        }
+    private boolean isCellOccupiedByCar(int row, int col) {
+        if (myCar != null) {
+            // check each cell in the 3x3 grid of the car
+            for (int i = myCar.getRow(); i < myCar.getRow() + 3; i++) {
+                for (int j = myCar.getCol(); j < myCar.getCol() + 3; j++) {
+                    // if the row and column match any of the cells in the car's grid, return true
+                    if (i == row && j == col) {
+                        return true;
                     }
-                    if (!freeCells) {
-                        break;
-                    }
-                }
-                // If freeCells is true, then we found a 3x3 free area, place the car here
-                if (freeCells) {
-                    for (int k = 0; k < 3; k++) {
-                        for (int l = 0; l < 3; l++) {
-                            carImageViews[k][l] = imageViews[i + k][j + l];
-                            carImageViews[k][l].setImageResource(R.drawable.baseline_directions_car_24);
-
-                            switch (selectedDirection) {
-                                case 0:
-                                    carImageViews[k][l].setRotation(0);
-                                    break;
-                                case 1:
-                                    carImageViews[k][l].setRotation(90);
-                                    break;
-                                case 2:
-                                    carImageViews[k][l].setRotation(180);
-                                    break;
-                                case 3:
-                                    carImageViews[k][l].setRotation(270);
-                                    break;
-                            }
-                        }
-                    }
-                    // Save the top-left corner of the car
-                    carCoordinates[0] = i;
-                    carCoordinates[1] = j;
-
-                    Toast.makeText(getContext(), "Car placed at (" + i + ", " + j + ")", Toast.LENGTH_SHORT).show();
-                    break outerloop;
                 }
             }
         }
-
-        // If no empty cell found, display a message
-        Toast.makeText(getContext(), "No empty cell to place the car", Toast.LENGTH_SHORT).show();
+        return false;
     }
-
-
-    private void rotateCar() {
-        selectedDirection = (selectedDirection + 1) % 4;
-        Toast.makeText(getContext(), "Car direction changed", Toast.LENGTH_SHORT).show();
-    }
-
     public static void hideKeyboardFrom(Context context, View view) {
         InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
+    private void moveCarUp() {
+        // Check if the new position is within the grid and not occupied by obstacles
+        if (myCar.getRow() - 1 >= 0 && !isAreaOccupiedByObstacle(myCar.getRow() - 1, myCar.getCol())) {
+            myCar.setRow(myCar.getRow() - 1);
+            placeCar(myCar.getRow(), myCar.getCol(),myCar.getDirection()); // This will update the car's position on the grid
+        } else {
+            Toast.makeText(getContext(), "The car cannot be moved up.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void moveCarDown() {
+        // Check if the new position is within the grid and not occupied by obstacles
+        if (myCar.getRow() + 3 < gridSize && !isAreaOccupiedByObstacle(myCar.getRow() + 1, myCar.getCol())) {
+            myCar.setRow(myCar.getRow() + 1);
+            placeCar(myCar.getRow(), myCar.getCol(), myCar.getDirection()); // This will update the car's position on the grid
+        } else {
+            Toast.makeText(getContext(), "The car cannot be moved down.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void moveCarLeft() {
+        // Check if the new position is within the grid and not occupied by obstacles
+        if (myCar.getCol() - 1 >= 0 && !isAreaOccupiedByObstacle(myCar.getRow(), myCar.getCol() - 1)) {
+            myCar.setCol(myCar.getCol() - 1);
+            placeCar(myCar.getRow(), myCar.getCol(), myCar.getDirection()); // This will update the car's position on the grid
+        } else {
+            Toast.makeText(getContext(), "The car cannot be moved left.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void moveCarRight() {
+        // Check if the new position is within the grid and not occupied by obstacles
+        if (myCar.getCol() + 3 < gridSize && !isAreaOccupiedByObstacle(myCar.getRow(), myCar.getCol() + 1)) {
+            myCar.setCol(myCar.getCol() + 1);
+            placeCar(myCar.getRow(), myCar.getCol(), myCar.getDirection()); // This will update the car's position on the grid
+        } else {
+            Toast.makeText(getContext(), "The car cannot be moved right.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean isAreaOccupiedByObstacle(int row, int col) {
+        // Check each cell in the 3x3 grid of the target area
+        for (int i = row; i < row + 3; i++) {
+            for (int j = col; j < col + 3; j++) {
+                // If the cell is occupied by an obstacle, return true
+                if (getObstacleAt(i, j) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     public void updateReceivedData(String data){
-        Log.i(TAG,"Data >>> " +data);
-        receivedDataTextArea.setText(data);
+        String prefix = getTextBeforeColon(data);
+        Log.d(TAG,"prefix >>> " +prefix);
+        switch (prefix) {
+            case "status":
+                //tested using "status:test"
+                data = data.substring(data.indexOf(":") + 1);
+                statusTextArea.setText(data);
+                break;
+            case "robot":
+                //tested using "robot:,5,6,0"
+                String[] splitString = data.split(","); //need to check empty?
+                for (String aa : splitString) {
+                    Log.d(TAG,"splitString >>> " +aa.trim());
+                }
+                int xCoor = Integer.parseInt(splitString[1]);
+                int yCoor = Integer.parseInt(splitString[2]);
+                int direction = Integer.parseInt(splitString[3]);
+                placeCar(xCoor,yCoor,direction);
+                break;
+            case "obstacle":
+                //Displaying Image Target ID on Obstacle Blocks in the Map.
+                Log.d(TAG,"Received Data for obstacle: " +data);
+                break;
+            default:
+                receivedDataTextArea.setText(data);
+        }
+    }
+
+    private String getTextBeforeColon(String input) {
+        int colonIndex = input.indexOf(':');
+        if (colonIndex != -1) {
+            return input.substring(0, colonIndex).trim().toLowerCase();
+        }
+        return "ERROR";
     }
 
 }

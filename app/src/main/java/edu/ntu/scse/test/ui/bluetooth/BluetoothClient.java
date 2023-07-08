@@ -23,6 +23,7 @@ public class BluetoothClient extends Thread {
     private static final UUID APP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final String TAG = "BluetoothClient";
     private BluetoothSocket socket;
+    private BluetoothSocket connectedSocket;
     private InputStream inputStream;
     private OutputStream outputStream;
     private ProgressDialog progressDialog;
@@ -79,12 +80,13 @@ public class BluetoothClient extends Thread {
             }
         });
 
-        while (!isConnected) {
+        //while (!isConnected) {
             while (retryCount < maxRetryCount) {
                 try {
                     socket.connect();
                     // If the connection is successful, break from the loop
-                    isConnected = true;
+                    connectedSocket = socket;
+                    isConnected  = true;
                     break;
                 } catch (IOException connectException) {
                     retryCount++; // Increment the retry count
@@ -115,7 +117,7 @@ public class BluetoothClient extends Thread {
 
                 receiveData();
             }
-        }
+        //}
     }
     public void sendData(String data) {
         if (outputStream != null) {
@@ -163,7 +165,7 @@ public class BluetoothClient extends Thread {
 
         while (retryCount < maxRetryCount) {
             try {
-                Thread.sleep(3000); // delay 3 seconds before reconnection attempt
+                Thread.sleep(5000); // delay 3 seconds before reconnection attempt
                 if (!BTUtils.checkBluetoothConnectionPermission(context)) {
                     BTUtils.requestBluetoothPermissions((Activity) context);
                 }
@@ -202,10 +204,11 @@ public class BluetoothClient extends Thread {
                     // Handle the case when all retries fail here. For example, you can show a Toast message to inform the user.
                     ((Activity) context).runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(context, "Unable to reconnect after " + maxRetryCount + " attempts", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "trying to reconnect...", Toast.LENGTH_SHORT).show();
                             progressDialog.dismiss();  //dismiss progressDialog here
                         }
                     });
+                    cleanup();
                     return; // Stop trying to reconnect
                 }
             } catch (InterruptedException e) {

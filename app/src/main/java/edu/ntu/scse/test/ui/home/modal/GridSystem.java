@@ -2,6 +2,7 @@ package edu.ntu.scse.test.ui.home.modal;
 
 import java.util.ArrayList;
 public class GridSystem {
+    /*
     Robot robot;
     ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
     Obstacle obstacleToEdit;
@@ -91,4 +92,6 @@ public class GridSystem {
     public int[][] getGrids() {
         return grids;
     }
+
+     */
 }
