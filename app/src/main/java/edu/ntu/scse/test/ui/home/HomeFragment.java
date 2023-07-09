@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,9 +14,11 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -42,6 +45,7 @@ public class HomeFragment extends Fragment {
     private ArrayList<Obstacle> obstacles;
     private Obstacle currentObstacle = null;
     private Car myCar;
+    private FrameLayout[][] frameLayouts;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -51,7 +55,7 @@ public class HomeFragment extends Fragment {
         final LinearLayout homeLayout = root.findViewById(R.id.home_layout);
         gridLayout = root.findViewById(R.id.gridLayout);
         final Button addObstacleButton = root.findViewById(R.id.addObstacleButton);
-        final Button removeObstacleButton = root.findViewById(R.id.removeObstacleButton);
+        final Button removeButton = root.findViewById(R.id.removeButton);
         final Button placeCarButton = root.findViewById(R.id.placeCarButton);
         final Button rotateButton = root.findViewById(R.id.rotateButton);
         final Button sendDataButton = root.findViewById(R.id.sendDataButton);
@@ -66,23 +70,36 @@ public class HomeFragment extends Fragment {
 
         obstacles = new ArrayList<>();
         imageViews = new ImageView[gridSize][gridSize];
+        frameLayouts = new FrameLayout[gridSize][gridSize];
         gridLayout.setColumnCount(gridSize);
         gridLayout.setRowCount(gridSize);
 
         for (int i = 0; i < gridSize; i++) {
             for (int j = 0; j < gridSize; j++) {
-                ImageView imageView = new ImageView(getContext());
+                //ImageView imageView = new ImageView(getContext());
+                FrameLayout frameLayout = new FrameLayout(getContext());
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.width = 0;
                 params.height = 0;
                 params.columnSpec = GridLayout.spec(j, 1, 1f);
                 params.rowSpec = GridLayout.spec(i, 1, 1f);
-                imageView.setLayoutParams(params);
-                imageView.setBackgroundColor(Color.WHITE);
+                frameLayout.setLayoutParams(params);
+                frameLayout.setBackgroundColor(Color.WHITE);
+
+                ImageView imageView = new ImageView(getContext());
                 imageView.setPadding(0, 1, 0, 1);
                 imageView.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.cell_border));
+
+                TextView textView = new TextView(getContext());
+                textView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+                textView.setVisibility(View.INVISIBLE);
+                frameLayout.addView(imageView);
+                frameLayout.addView(textView);
+
+                frameLayouts[i][j] = frameLayout;
+                gridLayout.addView(frameLayout);
                 imageViews[i][j] = imageView;
-                gridLayout.addView(imageView);
+                //gridLayout.addView(imageView);
             }
         }
 
@@ -105,10 +122,10 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        removeObstacleButton.setOnClickListener(view -> {
+        removeButton.setOnClickListener(view -> {
             if(!addObstacleActive && !dragObstacleActive && !placeCarActive && !rotateObstacleActive) {
                 removeObstacleActive = !removeObstacleActive;
-                updateButtonState(removeObstacleButton, removeObstacleActive);
+                updateButtonState(removeButton, removeObstacleActive);
             }else{
                 Toast.makeText(getContext(), "Only one button is allowed to be active.", Toast.LENGTH_SHORT).show();
             }
@@ -136,25 +153,34 @@ public class HomeFragment extends Fragment {
             if(MainActivity.bluetoothClient != null){
                 MainActivity.bluetoothClient.sendData("Arrow Up");
             }
-            moveCarUp();
+            if(myCar!=null) {
+                moveCarUp();
+            }
         });
         downArrowButton.setOnClickListener(view -> {
             if(MainActivity.bluetoothClient != null) {
                 MainActivity.bluetoothClient.sendData("Arrow Down");
             }
-            moveCarDown();
+            if(myCar!=null) {
+                moveCarDown();
+            }
         });
         leftArrowButton.setOnClickListener(view -> {
             if(MainActivity.bluetoothClient != null){
                 MainActivity.bluetoothClient.sendData("Arrow Left");
             }
-            moveCarLeft();
+            if(myCar!=null) {
+                moveCarLeft();
+            }
         });
         rightArrowButton.setOnClickListener(view -> {
             if(MainActivity.bluetoothClient != null){
                 MainActivity.bluetoothClient.sendData("Arrow Right");
             }
-            moveCarRight();
+            if(myCar!=null){
+                moveCarRight();
+            }
+
         });
 
 
@@ -169,11 +195,35 @@ public class HomeFragment extends Fragment {
                                 Toast.makeText(getContext(), "This cell is occupied by the car.", Toast.LENGTH_SHORT).show();
                                 return true;
                             }
+                            if(obstacles.size()>0){
+                                for (Obstacle obstacle : obstacles){
+                                    if(obstacle.getRow() == row && obstacle.getCol() == col){
+                                        Toast.makeText(getContext(), "This cell is occupied by an obstacle.", Toast.LENGTH_SHORT).show();
+                                        return true;
+                                    }
+                                }
+                            }
                             Obstacle obstacle = new Obstacle(row, col, obstaclesSize, Obstacle.NORTH);
                             obstacles.add(obstacle);
-                            imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle", obstacle.getDirection()));
                             obstaclesSize = obstaclesSize + 1;
                             Log.i(TAG, "Obstacle size after add: " + obstaclesSize);
+                            FrameLayout frameLayout = frameLayouts[obstacle.getRow()][obstacle.getCol()];
+                            imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle", obstacle.getDirection()));
+                            Log.i(TAG, "Obstacle Obj: " + obstacle.toString());
+
+                            TextView textView = (TextView) frameLayout.getChildAt(1);  // get the TextView
+
+                            if(obstacle != null && obstacle.getImageId() != 0){
+                                textView.setText(String.valueOf(obstacle.getImageId()));
+                            }else{
+                                textView.setText(String.valueOf(obstacle.getId()));  // set the text
+                            }
+
+                            textView.setTextColor(Color.WHITE);
+                            textView.setVisibility(View.VISIBLE);  // make it visible
+                            if(MainActivity.bluetoothClient != null){
+                                MainActivity.bluetoothClient.sendData("Obstacle >>> " +obstacle.toString());
+                            }
                             return true;
                         } else if (removeObstacleActive) {
                             removeObstacle(row, col);
@@ -183,15 +233,24 @@ public class HomeFragment extends Fragment {
                             if (obstacle != null) {
                                 currentObstacle = obstacle;
                                 currentObstacle.isBeingDragged = true;
+                                if(MainActivity.bluetoothClient != null){
+                                    MainActivity.bluetoothClient.sendData("Drag Obstacle >>> " +currentObstacle.toString());
+                                }
                             }
                             return true;
                         }else if (rotateObstacleActive) {
                             Obstacle obstacle = getObstacleAt(row, col);
                             if (obstacle != null) {
                                 rotateObstacle(obstacle);
+                                if(MainActivity.bluetoothClient != null){
+                                    MainActivity.bluetoothClient.sendData("Obstacle rotate >>> " +obstacle.toString());
+                                }
                             }
                             if (myCar != null && row >= myCar.getRow() && row < myCar.getRow() + 3 && col >= myCar.getCol() && col < myCar.getCol() + 3) {
                                 rotateCar();
+                                if(MainActivity.bluetoothClient != null){
+                                    MainActivity.bluetoothClient.sendData("myCar rotate >>> " +myCar.toString());
+                                }
                                 return true;
                             }
                             return true;
@@ -201,19 +260,25 @@ public class HomeFragment extends Fragment {
                         }
 
                     case MotionEvent.ACTION_MOVE:
-                        if (dragObstacleActive && currentObstacle != null && !isOutsideGrid(currentObstacle)) {
-
+                        if (dragObstacleActive && currentObstacle != null) {
                             if (isCellOccupiedByCar(row, col)) {
                                 Toast.makeText(getContext(), "This cell is occupied by the car.", Toast.LENGTH_SHORT).show();
                                 return true;
                             }
-                            // remove previous obstacle image
-                            imageViews[currentObstacle.getRow()][currentObstacle.getCol()].setImageResource(0);
+                            Log.d(TAG,"current Obstacle >>> " +currentObstacle.toString());
+                            if(MainActivity.bluetoothClient != null){
+                                MainActivity.bluetoothClient.sendData("Obstacle dragged to >>> " +currentObstacle.toString());
+                            }
+                            // remove previous obstacle image and hide associated text view
+                            FrameLayout oldFrameLayout = frameLayouts[currentObstacle.getRow()][currentObstacle.getCol()];
+                            ImageView oldImageView = (ImageView) oldFrameLayout.getChildAt(0);  // get the ImageView
+                            oldImageView.setImageResource(0);  // remove the image
+                            TextView oldTextView = (TextView) oldFrameLayout.getChildAt(1);  // get the TextView
+                            oldTextView.setVisibility(View.INVISIBLE);  // make it invisible
 
                             // check if new cell is occupied by another obstacle
                             Obstacle nextObstacle = getObstacleAt(row, col);
                             if(nextObstacle == null || nextObstacle == currentObstacle) {
-                                // update obstacle position
                                 currentObstacle.setRow(row);
                                 currentObstacle.setCol(col);
                                 if(isOutsideGrid(currentObstacle)) {
@@ -221,7 +286,20 @@ public class HomeFragment extends Fragment {
                                     Toast.makeText(getContext(), "Obstacle removed as it was dragged outside", Toast.LENGTH_SHORT).show();
                                     currentObstacle = null;
                                 } else {
-                                    imageViews[currentObstacle.getRow()][currentObstacle.getCol()].setImageResource(getDrawableForDirection("obstacle",currentObstacle.getDirection()));
+                                    FrameLayout newFrameLayout = frameLayouts[currentObstacle.getRow()][currentObstacle.getCol()];
+                                    ImageView newImageView = (ImageView) newFrameLayout.getChildAt(0);  // get the ImageView
+                                    newImageView.setImageResource(getDrawableForDirection("obstacle",currentObstacle.getDirection()));  // set the image
+
+                                    TextView newTextView = (TextView) newFrameLayout.getChildAt(1);  // get the TextView
+
+                                    if(currentObstacle != null && currentObstacle.getImageId() != 0){
+                                        newTextView.setText(String.valueOf(currentObstacle.getImageId()));  // set the text
+                                    }else{
+                                        newTextView.setText(String.valueOf(currentObstacle.getId()));  // set the text
+                                    }
+
+                                    newTextView.setTextColor(Color.WHITE);
+                                    newTextView.setVisibility(View.VISIBLE);  // make it visible
                                 }
                             } else {
                                 Toast.makeText(getContext(), "This cell is occupied by another obstacle.", Toast.LENGTH_SHORT).show();
@@ -248,8 +326,6 @@ public class HomeFragment extends Fragment {
             return false;
         });
 
-
-        // Set up touch listener for non-text box views to hide keyboard.
         homeLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -295,10 +371,20 @@ public class HomeFragment extends Fragment {
     private void removeObstacle(int row, int col) {
         Obstacle obstacle = getObstacleAt(row, col);
         if (obstacle != null) {
-            obstaclesSize = obstaclesSize -1;
-            Log.i(TAG,"Obstacle size after remove: " +obstaclesSize);
             obstacles.remove(obstacle);
             imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(0); //remove
+            FrameLayout frameLayout = frameLayouts[obstacle.getRow()][obstacle.getCol()];
+            TextView textView = (TextView) frameLayout.getChildAt(1);  // get the TextView
+            textView.setVisibility(View.INVISIBLE);  // make it invisible
+            if(MainActivity.bluetoothClient != null){
+                MainActivity.bluetoothClient.sendData("Obstacle removed>>> " +obstacle.toString());
+            }
+        }
+        if (myCar != null && row >= myCar.getRow() && row < myCar.getRow() + 3 && col >= myCar.getCol() && col < myCar.getCol() + 3) {
+            if (carImageView != null) {
+                gridLayout.removeView(carImageView);
+                myCar = null;
+            }
         }
     }
     private int getDrawableForDirection(String obj, int direction) {
@@ -373,10 +459,16 @@ public class HomeFragment extends Fragment {
         // Update car coordinates and direction
         myCar.setRow(row);
         myCar.setCol(col);
+        if(MainActivity.bluetoothClient != null){
+            MainActivity.bluetoothClient.sendData("myCar placeCar >>> " +myCar.toString());
+        }
     }
     private void rotateCar() {
         myCar.rotate();
         carImageView.setImageResource(getDrawableForDirection("car", myCar.getDirection()));
+        if(MainActivity.bluetoothClient != null){
+            MainActivity.bluetoothClient.sendData("myCar rotateCar >>> " +myCar.toString());
+        }
     }
     private void updateButtonState(Button button, boolean isActive) {
         if (isActive) {
@@ -457,27 +549,61 @@ public class HomeFragment extends Fragment {
     }
     public void updateReceivedData(String data){
         String prefix = getTextBeforeColon(data);
+        String[] splitString = null;
         Log.d(TAG,"prefix >>> " +prefix);
+        if(!data.isEmpty() && data.contains(",")){
+            splitString = data.split(",");
+            //for loop for testing purpose...
+            for (String aa : splitString) {
+                Log.d(TAG,"splitString >>> " +aa.trim());
+            }
+        }
+
         switch (prefix) {
             case "status":
                 //tested using "status:test"
-                data = data.substring(data.indexOf(":") + 1);
+                data = data.substring(data.indexOf(":") + 1).trim();
                 statusTextArea.setText(data);
                 break;
             case "robot":
                 //tested using "robot:,5,6,0"
-                String[] splitString = data.split(","); //need to check empty?
-                for (String aa : splitString) {
-                    Log.d(TAG,"splitString >>> " +aa.trim());
+                if (splitString != null) {
+                    int xCoor = Integer.parseInt(splitString[1].trim());
+                    int yCoor = Integer.parseInt(splitString[2].trim());
+                    int direction = Integer.parseInt(splitString[3].trim());
+                    placeCar(xCoor,yCoor,direction);
                 }
-                int xCoor = Integer.parseInt(splitString[1]);
-                int yCoor = Integer.parseInt(splitString[2]);
-                int direction = Integer.parseInt(splitString[3]);
-                placeCar(xCoor,yCoor,direction);
                 break;
             case "obstacle":
+                //tested using "obstacle:,15,6"
                 //Displaying Image Target ID on Obstacle Blocks in the Map.
+                //TARGET, <Obstacle Number>, <Target ID>”.
+                //obstacle number == current obstacle ID
+                //Target ID == imageId
                 Log.d(TAG,"Received Data for obstacle: " +data);
+                if (splitString != null) {
+                    //missign rol,col,direction
+                    int obstacleNum = Integer.parseInt(splitString[1].trim());
+                    int tagetId = Integer.parseInt(splitString[2].trim());
+                    //get obstacle based on the obstacleNum, set and display ImgId
+                    Log.d(TAG,"obstacleNum: " +obstacleNum);
+                    Log.d(TAG,"tagetId: " +tagetId);
+
+                    for (Obstacle obstacle : obstacles) {
+                        if (obstacle.getId() == obstacleNum) {
+                            obstacle.setImageId(tagetId);
+
+                            FrameLayout frameLayout = frameLayouts[obstacle.getRow()][obstacle.getCol()];
+                            imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle", obstacle.getDirection()));
+                            Log.i(TAG, "Obstacle Obj: " + obstacle.toString());
+                            TextView textView = (TextView) frameLayout.getChildAt(1);  // get the TextView
+                            textView.setText(String.valueOf(obstacle.getImageId()));
+                            textView.setTextColor(Color.WHITE);
+                            textView.setVisibility(View.VISIBLE);  // make it visible
+
+                        }
+                    }
+                }
                 break;
             default:
                 receivedDataTextArea.setText(data);
@@ -489,7 +615,7 @@ public class HomeFragment extends Fragment {
         if (colonIndex != -1) {
             return input.substring(0, colonIndex).trim().toLowerCase();
         }
-        return "ERROR";
+        return input;
     }
 
 }

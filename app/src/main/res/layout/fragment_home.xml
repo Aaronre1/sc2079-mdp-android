@@ -22,13 +22,6 @@
 
         </GridLayout>
 
-        <ImageView
-            android:id="@+id/car_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/car_north"
-            android:visibility="gone" />
-
     </FrameLayout>
 
     <LinearLayout
@@ -75,14 +68,14 @@
                     android:textSize="8sp" />
 
                 <Button
-                    android:id="@+id/removeObstacleButton"
+                    android:id="@+id/removeButton"
                     android:layout_width="1dp"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10sp"
                     android:layout_marginRight="10sp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="Remove Obstacle"
+                    android:text="Remove"
                     android:textSize="8sp" />
             </LinearLayout>
 
@@ -121,7 +114,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:orientation="horizontal">
-
+                <!--
                 <ImageView
                     android:id="@+id/upleftArrow"
                     android:layout_width="56px"
@@ -129,13 +122,16 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:src="@drawable/arrow_up_left" />
+                -->
                 <ImageView
                     android:id="@+id/upArrow"
                     android:layout_width="56px"
                     android:layout_height="56px"
+                    android:layout_marginLeft="3px"
                     android:layout_weight="1"
                     android:gravity="center"
                     android:src="@drawable/arrow_up" />
+                <!--
                 <ImageView
                     android:id="@+id/upRightArrow"
                     android:layout_width="56px"
@@ -143,6 +139,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:src="@drawable/arrow_up_right" />
+                 -->
             </LinearLayout>
 
             <LinearLayout
@@ -179,7 +176,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:orientation="horizontal">
-
+                <!--
                 <ImageView
                     android:id="@+id/downLeftArrow"
                     android:layout_width="56px"
@@ -187,13 +184,16 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:src="@drawable/arrow_down_left" />
+                -->
                 <ImageView
                     android:id="@+id/downArrow"
                     android:layout_width="56px"
                     android:layout_height="56px"
+                    android:layout_marginRight="5px"
                     android:layout_weight="1"
                     android:gravity="center"
                     android:src="@drawable/arrow_down" />
+                <!--
                 <ImageView
                     android:id="@+id/downRightArrow"
                     android:layout_width="56px"
@@ -201,7 +201,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:src="@drawable/arrow_down_right" />
-
+                -->
             </LinearLayout>
 
             <LinearLayout

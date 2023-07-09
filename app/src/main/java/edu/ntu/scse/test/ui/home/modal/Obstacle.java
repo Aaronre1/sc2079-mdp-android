@@ -18,7 +18,7 @@ public class Obstacle {
     public Obstacle(int row, int col, int id, int direction) {
         this.row = row;
         this.col = col;
-        this.id = id;
+        this.id = id+1;
         this.direction = direction;
     }
 
