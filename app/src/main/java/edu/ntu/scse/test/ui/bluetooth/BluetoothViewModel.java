@@ -10,7 +10,7 @@ public class BluetoothViewModel extends ViewModel {
 
     public BluetoothViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is bluetooth fragment");
+        mText.setValue("");
     }
 
     public LiveData<String> getText() {

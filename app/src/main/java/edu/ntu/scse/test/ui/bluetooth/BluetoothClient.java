@@ -23,6 +23,7 @@ public class BluetoothClient extends Thread {
     private static final UUID APP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final String TAG = "BluetoothClient";
     private BluetoothSocket socket;
+    private BluetoothSocket reconnectSocket;
     private BluetoothSocket connectedSocket;
     private InputStream inputStream;
     private OutputStream outputStream;
@@ -61,6 +62,7 @@ public class BluetoothClient extends Thread {
         }
         Log.i(TAG, "tmpSocket>>> "+ tmpSocket);
         socket = tmpSocket;
+        reconnectSocket = socket;
         inputStream = tmpIn;
         outputStream = tmpOut;
     }
@@ -111,10 +113,11 @@ public class BluetoothClient extends Thread {
             });
 
             Log.i(TAG, "socket >>> " + socket);
+            Log.i(TAG, "connectedSocket >>> " + connectedSocket);
+            Log.i(TAG, "reconnect socket >>> " + reconnectSocket);
 
-            if (isConnected) {
+            if (isConnected && connectedSocket == socket) {
                 sendData("Test String: " + timeStamp);
-
                 receiveData();
             }
         //}

@@ -71,8 +71,7 @@ public class Obstacle {
         return "Obstacle{" +
                 "row=" + row +
                 ", col=" + col +
-                ", isBeingDragged=" + isBeingDragged +
-                ", direction='" + direction + '\'' +
+                ", direction=" + direction +
                 ", imageId=" + imageId +
                 ", id=" + id +
                 '}';
