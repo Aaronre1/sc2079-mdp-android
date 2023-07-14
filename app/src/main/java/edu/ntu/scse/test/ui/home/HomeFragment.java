@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 import edu.ntu.scse.test.MainActivity;
@@ -197,13 +198,13 @@ public class HomeFragment extends Fragment {
                     case MotionEvent.ACTION_MOVE:
                         if (dragObstacleActive) {
                             Log.d(TAG, "CURRENT OBS: " +currentObstacle);
-                                if(currentObstacle!=null){
-                                    removeObstacle(currentObstacle.getRow(),currentObstacle.getCol());
-                                }
+                            if(currentObstacle!=null){
+                                removeObstacle(currentObstacle.getRow(),currentObstacle.getCol());
                             }
-                            return true;
                         }
+                        return true;
                 }
+            }
 
             if(row >= 0 && col >= 0) {
                 switch (motionEvent.getAction()) {
@@ -266,7 +267,8 @@ public class HomeFragment extends Fragment {
                             }
                             Log.d(TAG,"ROW:: " +(myCar.getRow() + 3));
                             Log.d(TAG,"col:: " +(myCar.getCol() + 3));
-                            if (myCar != null && row <= myCar.getRow() && row > myCar.getRow() - 3 && col >= myCar.getCol() && col < myCar.getCol() + 3) {
+                            if (myCar != null && row >= myCar.getRow() - 1 && row <= myCar.getRow() + 1
+                                    && col >= myCar.getCol() - 1 && col <= myCar.getCol() + 1) {
                                 rotateCar();
                                 if(MainActivity.bluetoothClient != null){
                                     MainActivity.bluetoothClient.sendData("myCar rotate >>> " +myCar.toString());
@@ -415,7 +417,8 @@ public class HomeFragment extends Fragment {
             }
             currentObstacle = null;
         }
-        if (myCar != null && row >= myCar.getRow() && row < myCar.getRow() + 3 && col >= myCar.getCol() && col < myCar.getCol() + 3) {
+        if (myCar != null && row >= myCar.getRow() - 1 && row <= myCar.getRow() + 1
+                && col >= myCar.getCol() - 1 && col <= myCar.getCol() + 1) {
             if (carImageView != null) {
                 gridLayout.removeView(carImageView);
                 myCar = null;
@@ -458,12 +461,12 @@ public class HomeFragment extends Fragment {
     private void placeCar(int row, int col, int direction) {
         Log.d("placeCar","row: " +row);
         Log.d("placeCar","col: " +col);
-        if (row - 2 < 0 || col + 2 >= gridSize) {
+        if (row - 1 < 0 || row + 1 >= gridSize || col - 1 < 0 || col + 1 >= gridSize) {
             Toast.makeText(getContext(), "The car cannot be placed here.", Toast.LENGTH_SHORT).show();
             return;
         }
-        for (int i = row; i > row - 3; i--) {
-            for (int j = col; j < col + 3; j++) {
+        for (int i = row - 1; i <= row + 1; i++) {
+            for (int j = col - 1; j <= col + 1; j++) {
                 Obstacle obstacle = getObstacleAt(i, j);
                 if (obstacle != null) {
                     Toast.makeText(getContext(), "The car cannot be placed on an obstacle.", Toast.LENGTH_SHORT).show();
@@ -478,8 +481,9 @@ public class HomeFragment extends Fragment {
         GridLayout.LayoutParams carLayoutParams = new GridLayout.LayoutParams();
         carLayoutParams.width = 0;
         carLayoutParams.height = 0;
-        carLayoutParams.columnSpec = GridLayout.spec(col, 3, 1f);
-        carLayoutParams.rowSpec = GridLayout.spec(gridSize - 1 - row, 3, 1f);
+        carLayoutParams.columnSpec = GridLayout.spec(col-1, 3, 1f);
+        carLayoutParams.rowSpec = GridLayout.spec(gridSize - 2 - row, 3, 1f);
+        Log.d("columnSpec",carLayoutParams.toString());
         carView.setLayoutParams(carLayoutParams);
         if (carImageView != null) {
             gridLayout.removeView(carImageView);
@@ -557,7 +561,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void moveCarRight() {
-        if (myCar.getCol() + 3 < gridSize && !isAreaOccupiedByObstacle(myCar.getRow(), myCar.getCol() + 1)) {
+        if (myCar.getCol() + 2 < gridSize && !isAreaOccupiedByObstacle(myCar.getRow(), myCar.getCol() + 1)) {
             placeCar(myCar.getRow(), myCar.getCol() + 1, myCar.getDirection());
         } else {
             Toast.makeText(getContext(), "The car cannot be moved right.", Toast.LENGTH_SHORT).show();
@@ -569,8 +573,8 @@ public class HomeFragment extends Fragment {
 
     private boolean isAreaOccupiedByObstacle(int row, int col) {
         // Check each cell in the 3x3 grid of the target area
-        for (int i = row; i > row - 3; i--) {
-            for (int j = col; j < col + 3; j++) {
+        for (int i = row - 1; i <= row + 1; i++) {
+            for (int j = col - 1; j <= col + 1; j++) {
                 // If the cell is occupied by an obstacle, return true
                 if (getObstacleAt(i, j) != null) {
                     return true;
