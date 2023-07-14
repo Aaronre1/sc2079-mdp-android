@@ -74,7 +74,7 @@ public class HomeFragment extends Fragment {
         gridLayout.setColumnCount(gridSize);
         gridLayout.setRowCount(gridSize);
 
-        for (int i = 0; i < gridSize; i++) {
+        for (int i = gridSize - 1; i >= 0; i--) {
             for (int j = 0; j < gridSize; j++) {
                 //ImageView imageView = new ImageView(getContext());
                 FrameLayout frameLayout = new FrameLayout(getContext());
@@ -96,11 +96,12 @@ public class HomeFragment extends Fragment {
                 frameLayout.addView(imageView);
                 frameLayout.addView(textView);
 
-                frameLayouts[i][j] = frameLayout;
+                frameLayouts[gridSize - 1 - i][j] = frameLayout;
                 gridLayout.addView(frameLayout);
-                imageViews[i][j] = imageView;
+                imageViews[gridSize - 1 - i][j] = imageView;
             }
         }
+
 
         addObstacleButton.setOnClickListener(view -> {
             if(!removeObstacleActive && !dragObstacleActive && !placeCarActive && !rotateObstacleActive){
@@ -183,9 +184,10 @@ public class HomeFragment extends Fragment {
         });
 
         gridLayout.setOnTouchListener((view, motionEvent) -> {
-            //int row = Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize));
+            //int col = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
+            //int row = Math.max(-10, Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize)));
             int col = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
-            int row = Math.max(-10, Math.min(gridSize - 1, (int) (motionEvent.getY() / view.getHeight() * gridSize)));
+            int row = Math.min(gridSize - 1, gridSize - 1 - (int) (motionEvent.getY() / view.getHeight() * gridSize));
 
             Log.d(TAG,"row >>> " +row);
             Log.d(TAG,"col >>> " +col);
@@ -262,7 +264,9 @@ public class HomeFragment extends Fragment {
                                     MainActivity.bluetoothClient.sendData("rotate obs: " +obstacle.toString());
                                 }
                             }
-                            if (myCar != null && row >= myCar.getRow() && row < myCar.getRow() + 3 && col >= myCar.getCol() && col < myCar.getCol() + 3) {
+                            Log.d(TAG,"ROW:: " +(myCar.getRow() + 3));
+                            Log.d(TAG,"col:: " +(myCar.getCol() + 3));
+                            if (myCar != null && row <= myCar.getRow() && row > myCar.getRow() - 3 && col >= myCar.getCol() && col < myCar.getCol() + 3) {
                                 rotateCar();
                                 if(MainActivity.bluetoothClient != null){
                                     MainActivity.bluetoothClient.sendData("myCar rotate >>> " +myCar.toString());
@@ -336,6 +340,16 @@ public class HomeFragment extends Fragment {
                             }
                         }
                         Log.i(TAG, "Last position: (" + row + "," + col + ")");
+                        if(myCar != null){
+                            Log.i("ACTION_UP", "Car: " + myCar.toString());
+                        }
+                        if(obstacles != null){
+                            for(int i=0;i<obstacles.size();i++){
+                                Log.i(TAG, "Obstacles: "+ i + " >>> " +obstacles.get(i).toString());
+                            }
+
+                        }
+
                         return true;
                 }
             }
@@ -374,7 +388,7 @@ public class HomeFragment extends Fragment {
         return root;
     }
     private boolean isOutsideGrid(Obstacle obstacle) {
-        return obstacle.getRow() < 0 || obstacle.getCol() < 0 || obstacle.getRow() >= gridSize || obstacle.getCol() >= gridSize;
+        return obstacle.getRow() < 0 || obstacle.getCol() < 0 || gridSize - 1 - obstacle.getRow() >= gridSize || obstacle.getCol() >= gridSize;
     }
     private Obstacle getObstacleAt(int row, int col) {
         for (Obstacle obstacle : obstacles) {
@@ -384,8 +398,12 @@ public class HomeFragment extends Fragment {
         }
         return null;
     }
+
     private void removeObstacle(int row, int col) {
         Obstacle obstacle = getObstacleAt(row, col);
+        Log.d(TAG,"checking..."+row);
+        Log.d(TAG,"checking..."+col);
+        Log.d(TAG,"checking..."+getObstacleAt(row, col));
         if (obstacle != null) {
             obstacles.remove(obstacle);
             imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(0); //remove
@@ -404,6 +422,7 @@ public class HomeFragment extends Fragment {
             }
         }
     }
+
     private int getDrawableForDirection(String obj, int direction) {
         if(obj.equalsIgnoreCase("obstacle")){
             switch (direction) {
@@ -437,13 +456,13 @@ public class HomeFragment extends Fragment {
         imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle",obstacle.getDirection()));
     }
     private void placeCar(int row, int col, int direction) {
-        // Check if the car fits in the grid.
-        if (row + 2 >= gridSize || col + 2 >= gridSize) {
+        Log.d("placeCar","row: " +row);
+        Log.d("placeCar","col: " +col);
+        if (row - 2 < 0 || col + 2 >= gridSize) {
             Toast.makeText(getContext(), "The car cannot be placed here.", Toast.LENGTH_SHORT).show();
             return;
         }
-        // Check if there are obstacles on the way.
-        for (int i = row; i < row + 3; i++) {
+        for (int i = row; i > row - 3; i--) {
             for (int j = col; j < col + 3; j++) {
                 Obstacle obstacle = getObstacleAt(i, j);
                 if (obstacle != null) {
@@ -452,30 +471,24 @@ public class HomeFragment extends Fragment {
                 }
             }
         }
-        // Create a new car view with the car drawable.
         ImageView carView = new ImageView(getContext());
-        myCar = new Car(row, col, direction); //Initialize, direction default North
+        myCar = new Car(row, col, direction);
         carView.setImageResource(getDrawableForDirection("car",myCar.getDirection()));
-        carView.setBackgroundResource(R.drawable.cell_border); // add cell border drawable as the background resource
-
-        // Set the layout parameters of the car view to span 3 cells.
+        carView.setBackgroundResource(R.drawable.cell_border);
         GridLayout.LayoutParams carLayoutParams = new GridLayout.LayoutParams();
         carLayoutParams.width = 0;
         carLayoutParams.height = 0;
         carLayoutParams.columnSpec = GridLayout.spec(col, 3, 1f);
-        carLayoutParams.rowSpec = GridLayout.spec(row, 3, 1f);
+        carLayoutParams.rowSpec = GridLayout.spec(gridSize - 1 - row, 3, 1f);
         carView.setLayoutParams(carLayoutParams);
-        // Remove old car view from the grid if it exists.
         if (carImageView != null) {
             gridLayout.removeView(carImageView);
         }
-        // Add the car view to the grid layout.
         gridLayout.addView(carView);
-        // Save the car view.
         carImageView = carView;
-        // Update car coordinates and direction
         myCar.setRow(row);
         myCar.setCol(col);
+        Log.d("placeCar2","placeCar: "+myCar.toString());
         if(MainActivity.bluetoothClient != null){
             MainActivity.bluetoothClient.sendData("placeCar: " +myCar.toString());
         }
@@ -496,10 +509,8 @@ public class HomeFragment extends Fragment {
     }
     private boolean isCellOccupiedByCar(int row, int col) {
         if (myCar != null) {
-            // check each cell in the 3x3 grid of the car
-            for (int i = myCar.getRow(); i < myCar.getRow() + 3; i++) {
+            for (int i = gridSize - 1 - myCar.getRow(); i > gridSize - 1 - myCar.getRow() - 3; i--) {
                 for (int j = myCar.getCol(); j < myCar.getCol() + 3; j++) {
-                    // if the row and column match any of the cells in the car's grid, return true
                     if (i == row && j == col) {
                         return true;
                     }
@@ -513,48 +524,52 @@ public class HomeFragment extends Fragment {
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
     private void moveCarUp() {
-        // Check if the new position is within the grid and not occupied by obstacles
-        if (myCar.getRow() - 1 >= 0 && !isAreaOccupiedByObstacle(myCar.getRow() - 1, myCar.getCol())) {
-            myCar.setRow(myCar.getRow() - 1);
-            placeCar(myCar.getRow(), myCar.getCol(),myCar.getDirection()); // This will update the car's position on the grid
+        if (myCar.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myCar.getRow()+1, myCar.getCol())) {
+            placeCar(myCar.getRow() + 1, myCar.getCol(), myCar.getDirection());
         } else {
             Toast.makeText(getContext(), "The car cannot be moved up.", Toast.LENGTH_SHORT).show();
+        }
+        if(myCar != null){
+            Log.i("moveCarUp", "Car: " + myCar.toString());
         }
     }
 
     private void moveCarDown() {
-        // Check if the new position is within the grid and not occupied by obstacles
-        if (myCar.getRow() + 3 < gridSize && !isAreaOccupiedByObstacle(myCar.getRow() + 1, myCar.getCol())) {
-            myCar.setRow(myCar.getRow() + 1);
-            placeCar(myCar.getRow(), myCar.getCol(), myCar.getDirection()); // This will update the car's position on the grid
+        if (myCar.getRow() - 1 >= 0 && !isAreaOccupiedByObstacle(myCar.getRow() - 1, myCar.getCol())) {
+            placeCar(myCar.getRow() - 1, myCar.getCol(), myCar.getDirection());
         } else {
             Toast.makeText(getContext(), "The car cannot be moved down.", Toast.LENGTH_SHORT).show();
+        }
+        if(myCar != null){
+            Log.i("moveCarDown", "Car: " + myCar.toString());
         }
     }
 
     private void moveCarLeft() {
-        // Check if the new position is within the grid and not occupied by obstacles
         if (myCar.getCol() - 1 >= 0 && !isAreaOccupiedByObstacle(myCar.getRow(), myCar.getCol() - 1)) {
-            myCar.setCol(myCar.getCol() - 1);
-            placeCar(myCar.getRow(), myCar.getCol(), myCar.getDirection()); // This will update the car's position on the grid
+            placeCar(myCar.getRow(), myCar.getCol() - 1, myCar.getDirection());
         } else {
             Toast.makeText(getContext(), "The car cannot be moved left.", Toast.LENGTH_SHORT).show();
+        }
+        if(myCar != null){
+            Log.i("moveCarLeft", "Car: " + myCar.toString());
         }
     }
 
     private void moveCarRight() {
-        // Check if the new position is within the grid and not occupied by obstacles
         if (myCar.getCol() + 3 < gridSize && !isAreaOccupiedByObstacle(myCar.getRow(), myCar.getCol() + 1)) {
-            myCar.setCol(myCar.getCol() + 1);
-            placeCar(myCar.getRow(), myCar.getCol(), myCar.getDirection()); // This will update the car's position on the grid
+            placeCar(myCar.getRow(), myCar.getCol() + 1, myCar.getDirection());
         } else {
             Toast.makeText(getContext(), "The car cannot be moved right.", Toast.LENGTH_SHORT).show();
+        }
+        if(myCar != null){
+            Log.i("moveCarRight", "Car: " + myCar.toString());
         }
     }
 
     private boolean isAreaOccupiedByObstacle(int row, int col) {
         // Check each cell in the 3x3 grid of the target area
-        for (int i = row; i < row + 3; i++) {
+        for (int i = row; i > row - 3; i--) {
             for (int j = col; j < col + 3; j++) {
                 // If the cell is occupied by an obstacle, return true
                 if (getObstacleAt(i, j) != null) {
@@ -564,6 +579,7 @@ public class HomeFragment extends Fragment {
         }
         return false;
     }
+
     public void updateReceivedData(String data){
         String prefix = getTextBeforeColon(data);
         String[] splitString = null;

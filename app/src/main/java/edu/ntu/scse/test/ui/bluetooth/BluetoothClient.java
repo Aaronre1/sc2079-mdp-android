@@ -139,7 +139,6 @@ public class BluetoothClient extends Thread {
         // Keep listening to the InputStream until an exception occurs
         while (true) {
             try {
-                // Read from the InputStream
                 bytes = inputStream.read(buffer);
                 String received = new String(buffer, 0, bytes);
                 Log.i(TAG, "Received data: " + received);
