@@ -4,22 +4,21 @@ public class Obstacle {
     private int row;
     private int col;
     public boolean isBeingDragged;
-
     private int direction;
 
     private int imageId;
     private int id;
-
-    public static final int EAST = 0;
-    public static final int NORTH = 1;
-    public static final int WEST = 2;
-    public static final int SOUTH = 3;
+    public static final int NORTH = 0;
+    public static final int EAST = 2;
+    public static final int SOUTH = 4;
+    public static final int WEST = 6;
 
     public Obstacle(int row, int col, int id, int direction) {
         this.row = row;
         this.col = col;
         this.id = id+1;
         this.direction = direction;
+        this.imageId=0;
     }
 
     public int getRow() {
@@ -49,7 +48,6 @@ public class Obstacle {
     public int getImageId() {
         return imageId;
     }
-
     public void setImageId(int imageId) {
         this.imageId = imageId;
     }
@@ -63,9 +61,8 @@ public class Obstacle {
     }
 
     public void rotate() {
-        this.direction = (this.direction + 1) % 4;//(NORTH -> EAST -> SOUTH -> WEST -> NORTH -> ...).
+        this.direction = (this.direction + 2) % 8;
     }
-
     @Override
     public String toString() {
         return "Obstacle{" +

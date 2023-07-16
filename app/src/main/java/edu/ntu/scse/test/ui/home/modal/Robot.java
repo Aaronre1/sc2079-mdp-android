@@ -1,16 +1,16 @@
 package edu.ntu.scse.test.ui.home.modal;
 
-public class Car {
+public class Robot {
     private int row;
     private int col;
     private int direction;
 
     public static final int NORTH = 0;
-    public static final int EAST = 1;
-    public static final int SOUTH = 2;
-    public static final int WEST = 3;
+    public static final int EAST = 2;
+    public static final int SOUTH = 4;
+    public static final int WEST = 6;
 
-    public Car(int row, int col, int direction) {
+    public Robot(int row, int col, int direction) {
         this.row = row;
         this.col = col;
         this.direction = direction;
@@ -19,19 +19,15 @@ public class Car {
     public int getRow() {
         return row;
     }
-
     public void setRow(int row) {
         this.row = row;
     }
-
     public int getCol() {
         return col;
     }
-
     public void setCol(int col) {
         this.col = col;
     }
-
     public int getDirection() {
         return direction;
     }
@@ -41,12 +37,13 @@ public class Car {
     }
 
     public void rotate() {
-        direction = (direction + 1) % 4;
+        this.direction = (this.direction + 2) % 8;
     }
+
 
     @Override
     public String toString() {
-        return "Car{" +
+        return "Robot{" +
                 "row=" + row +
                 ", col=" + col +
                 ", direction=" + direction +
