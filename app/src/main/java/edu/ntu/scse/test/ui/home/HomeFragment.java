@@ -174,18 +174,39 @@ public class HomeFragment extends Fragment {
             if(MainActivity.bluetoothClient != null){
                 MainActivity.bluetoothClient.sendData("Arrow Up");
             }
-            if(myRobot !=null) {
-                moveRobotUp();
-            }
+            moveRobotUp();
         });
         downArrowButton.setOnClickListener(view -> {
             if(MainActivity.bluetoothClient != null) {
                 MainActivity.bluetoothClient.sendData("Arrow Down");
             }
-            if(myRobot !=null) {
-                moveRobotDown();
-            }
+            moveRobotDown();
         });
+        upRightArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null) {
+                MainActivity.bluetoothClient.sendData("Arrow Up Right");
+            }
+            moveRobotUpRight();
+        });
+        upleftArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null) {
+                MainActivity.bluetoothClient.sendData("Arrow Up Left");
+            }
+            moveRobotUpLeft();
+        });
+        downRightArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null) {
+                MainActivity.bluetoothClient.sendData("Arrow Down Right");
+            }
+            moveRobotBottomRight();
+        });
+        downLeftArrowButton.setOnClickListener(view -> {
+            if(MainActivity.bluetoothClient != null) {
+                MainActivity.bluetoothClient.sendData("Arrow Down Left");
+            }
+            moveRobotBottomLeft();
+        });
+
         captureButton.setOnClickListener(view -> {
             if(MainActivity.bluetoothClient != null) {
                 MainActivity.bluetoothClient.sendData("Capture");
@@ -677,27 +698,90 @@ public class HomeFragment extends Fragment {
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
     private void moveRobotUp() {
-        if (myRobot.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
-            placeRobot(myRobot.getRow() + 1, myRobot.getCol(), myRobot.getDirection());
-        } else {
-            Toast.makeText(getContext(), "The robot cannot be moved up.", Toast.LENGTH_SHORT).show();
-        }
-        if(myRobot != null){
-            Log.i("moveRobotUp", "Robot: " + myRobot.toString());
+        if(myRobot!=null){
+            switch(myRobot.getDirection()){
+                case 0:
+                    if(myRobot.getRow() + 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow() + 1, myRobot.getCol())) {
+                        placeRobot(myRobot.getRow()+1, myRobot.getCol(), myRobot.getDirection());
+                        Log.i("moveRobotUp case 0", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 2:
+                    if(myRobot.getCol() + 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol()+1)) {
+                        placeRobot(myRobot.getRow(), myRobot.getCol()+1, myRobot.getDirection());
+                        Log.i("moveRobotUp case 2", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 4:
+                    if(myRobot.getRow() - 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol())) {
+                        placeRobot(myRobot.getRow()-1, myRobot.getCol(), myRobot.getDirection());
+                        Log.i("moveRobotUp case 4", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 6:
+                    if(myRobot.getCol() - 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol()-1)) {
+                        placeRobot(myRobot.getRow(), myRobot.getCol()-1, myRobot.getDirection());
+                        Log.i("moveRobotUp case 6", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                default:
+                    Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getContext(), "Robot Not Found!", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void moveRobotDown() {
-        if (myRobot.getRow() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow() - 1, myRobot.getCol())) {
-            placeRobot(myRobot.getRow() - 1, myRobot.getCol(), myRobot.getDirection());
-        } else {
-            Toast.makeText(getContext(), "The robot cannot be moved down.", Toast.LENGTH_SHORT).show();
-        }
-        if(myRobot != null){
-            Log.i("moveRobotDown", "Robot: " + myRobot.toString());
+
+        if(myRobot!=null){
+            switch(myRobot.getDirection()){
+                case 0:
+                    if(myRobot.getRow() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow() - 1, myRobot.getCol())) {
+                        placeRobot(myRobot.getRow()-1, myRobot.getCol(), myRobot.getDirection());
+                        Log.i("moveRobotDown case 0", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be move down.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 2:
+                    if(myRobot.getCol() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol()-1)) {
+                        placeRobot(myRobot.getRow(), myRobot.getCol()-1, myRobot.getDirection());
+                        Log.i("moveRobotDown case 2", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be move down.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 4:
+                    if(myRobot.getRow() + 1 >=0  && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
+                        placeRobot(myRobot.getRow()+1, myRobot.getCol(), myRobot.getDirection());
+                        Log.i("moveRobotDown case 4", "Robot: " + myRobot.toString());
+                    }
+                    break;
+                case 6:
+                    if(myRobot.getCol() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol()+1)) {
+                        placeRobot(myRobot.getRow(), myRobot.getCol()+1, myRobot.getDirection());
+                        Log.i("moveRobotDown case 6", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be move down.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                default:
+                    Toast.makeText(getContext(), "The robot cannot be move down.", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getContext(), "Robot Not Found!", Toast.LENGTH_SHORT).show();
         }
     }
-
+/*
     private void moveRobotLeft() {
         if (myRobot.getCol() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol() - 1)) {
             placeRobot(myRobot.getRow(), myRobot.getCol() - 1, myRobot.getDirection());
@@ -708,7 +792,6 @@ public class HomeFragment extends Fragment {
             Log.i("moveRobotLeft", "Robot: " + myRobot.toString());
         }
     }
-
     private void moveRobotRight() {
         if (myRobot.getCol() + 2 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol() + 1)) {
             placeRobot(myRobot.getRow(), myRobot.getCol() + 1, myRobot.getDirection());
@@ -719,50 +802,196 @@ public class HomeFragment extends Fragment {
             Log.i("moveRobotRight", "Robot: " + myRobot.toString());
         }
     }
-/* TBC
+ */
+
     private void moveRobotUpRight() {
-        if (myRobot.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
-            placeRobot(myRobot.getRow() + 1, myRobot.getCol(), myRobot.getDirection());
-        } else {
-            Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
-        }
-        if(myRobot != null){
-            Log.i("moveRobotUpRight", "Robot: " + myRobot.toString());
+
+        if(myRobot!=null){
+            switch(myRobot.getDirection()){
+                case 0:
+                    if(myRobot.getRow() +3 < gridSize  && myRobot.getCol() +1 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()+1)){
+                        placeRobot(myRobot.getRow()+3, myRobot.getCol()+1, myRobot.getDirection()+2);
+                        Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 2:
+                    if(myRobot.getRow() -1 >=0  && myRobot.getCol() + 3 < gridSize
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()+3)){
+                        placeRobot(myRobot.getRow()-1, myRobot.getCol()+3, myRobot.getDirection()+2);
+                        Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 4:
+                    if(myRobot.getRow() -3 >=0  && myRobot.getCol() -1 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()-1)){
+                        placeRobot(myRobot.getRow()-3, myRobot.getCol()-1, myRobot.getDirection()+2);
+                        Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 6:
+                    if(myRobot.getRow() + 1 < gridSize && myRobot.getCol() -3 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()-3)){
+                        placeRobot(myRobot.getRow()+1, myRobot.getCol()-3, 0);
+                        Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                default:
+                    Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getContext(), "Robot Not Found!", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void moveRobotUpLeft() {
-        if (myRobot.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
-            placeRobot(myRobot.getRow() + 1, myRobot.getCol(), myRobot.getDirection());
-        } else {
-            Toast.makeText(getContext(), "The robot cannot be moved up left", Toast.LENGTH_SHORT).show();
-        }
-        if(myRobot != null){
-            Log.i("moveRobotUpLeft", "Robot: " + myRobot.toString());
+        if(myRobot!=null){
+            switch(myRobot.getDirection()){
+                case 0:
+                    if(myRobot.getRow() +3 < gridSize  && myRobot.getCol() -1 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()-1)){
+                        placeRobot(myRobot.getRow()+3, myRobot.getCol()-1, 6);
+                        Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 2:
+                    if(myRobot.getRow() +1 < gridSize  && myRobot.getCol() +3 < gridSize
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()+3)){
+                        placeRobot(myRobot.getRow()+1, myRobot.getCol()+3, myRobot.getDirection()-2);
+                        Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 4:
+                    if(myRobot.getRow() -3 >=0  && myRobot.getCol() +1 < gridSize
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()+1)){
+                        placeRobot(myRobot.getRow()-3, myRobot.getCol()+1, myRobot.getDirection()-2);
+                        Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 6:
+                    if(myRobot.getRow() - 1 >=0 && myRobot.getCol() -3 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()-3)){
+                        placeRobot(myRobot.getRow()-1, myRobot.getCol()-3, myRobot.getDirection()-2);
+                        Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                default:
+                    Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getContext(), "Robot Not Found!", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void moveRobotBottomRight() {
-        if (myRobot.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
-            placeRobot(myRobot.getRow() + 1, myRobot.getCol(), myRobot.getDirection());
-        } else {
-            Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
-        }
-        if(myRobot != null){
-            Log.i("moveRobotBottomRight", "Robot: " + myRobot.toString());
+        if(myRobot!=null){
+            switch(myRobot.getDirection()){
+                case 0:
+                    if(myRobot.getRow() -3 >=0  && myRobot.getCol() +1 < gridSize
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()+1)){
+                        placeRobot(myRobot.getRow()-3, myRobot.getCol()+1, myRobot.getDirection()+2);
+                        Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 2:
+                    if(myRobot.getRow() -1 < gridSize  && myRobot.getCol() - 3 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()-3)){
+                        placeRobot(myRobot.getRow()-1, myRobot.getCol()-3, myRobot.getDirection()+2);
+                        Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 4:
+                    if(myRobot.getRow() +3 < gridSize  && myRobot.getCol() -1 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()-1)){
+                        placeRobot(myRobot.getRow()+3, myRobot.getCol()-1, myRobot.getDirection()+2);
+                        Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 6:
+                    if(myRobot.getRow() + 1 < gridSize && myRobot.getCol() +3 < gridSize
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()+3)){
+                        placeRobot(myRobot.getRow()+1, myRobot.getCol()+3, 0);
+                        Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                default:
+                    Toast.makeText(getContext(), "The robot cannot be moved right.", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getContext(), "Robot Not Found!", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void moveRobotBottomLeft() {
-        if (myRobot.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
-            placeRobot(myRobot.getRow() + 1, myRobot.getCol(), myRobot.getDirection());
-        } else {
-            Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
+        if(myRobot!=null){
+            switch(myRobot.getDirection()){
+                case 0:
+                    if(myRobot.getRow() -3 >=0  && myRobot.getCol() -1 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()-1)){
+                        placeRobot(myRobot.getRow()-3, myRobot.getCol()-1, 6);
+                        Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 2:
+                    if(myRobot.getRow() +1 < gridSize  && myRobot.getCol() - 3 >=0
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()-3)){
+                        placeRobot(myRobot.getRow()+1, myRobot.getCol()-3, myRobot.getDirection()-2);
+                        Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 4:
+                    if(myRobot.getRow() +3 < gridSize  && myRobot.getCol() +1 < gridSize
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()+1)){
+                        placeRobot(myRobot.getRow()+3, myRobot.getCol()+1, myRobot.getDirection()-2);
+                        Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 6:
+                    if(myRobot.getRow() - 1 >=0 && myRobot.getCol() +3 < gridSize
+                            && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()+3)){
+                        placeRobot(myRobot.getRow()-1, myRobot.getCol()+3, myRobot.getDirection()-2);
+                        Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                    }else{
+                        Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                default:
+                    Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getContext(), "Robot Not Found!", Toast.LENGTH_SHORT).show();
         }
-        if(myRobot != null){
-            Log.i("moveRobotBottomLeft", "Robot: " + myRobot.toString());
-        }
-    } */
+    }
     private boolean validateSetUpCoordinate(EditText val){
         String editTextValueString = val.getText().toString();
         Log.d("validateSetUpCoordinate", "editTextValueString >>> "+editTextValueString);
@@ -832,7 +1061,6 @@ public class HomeFragment extends Fragment {
         }
         return jsonObject.toString();
     }
-
     public void updateReceivedData(String data){
         String prefix = getTextBeforeColon(data);
         String[] splitString = null;
@@ -844,7 +1072,6 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG,"splitString: " +aa.trim());
             }
         }
-
         switch (prefix) {
             case "status":
                 //tested using "status:test"
