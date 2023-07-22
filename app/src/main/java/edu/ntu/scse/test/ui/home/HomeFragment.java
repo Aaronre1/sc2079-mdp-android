@@ -237,7 +237,7 @@ public class HomeFragment extends Fragment {
             int row = Math.min(gridSize - 1, (int) (motionEvent.getX() / view.getWidth() * gridSize));
             int col = Math.min(gridSize - 1, gridSize - 1 - (int) (motionEvent.getY() / view.getHeight() * gridSize));
             //drag up of the grid and remove
-            if(row<0){
+            if(col<0){
                 switch (motionEvent.getAction()){
                     case MotionEvent.ACTION_MOVE:
                         if (dragObstacleActive) {
