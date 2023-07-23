@@ -117,7 +117,7 @@ public class BluetoothClient extends Thread {
             Log.i(TAG, "reconnect socket >>> " + reconnectSocket);
 
             if (isConnected && connectedSocket == socket) {
-                sendData("Test String: " + timeStamp);
+                sendData("Device Connected: " + timeStamp);
                 receiveData();
             }
         //}
@@ -142,6 +142,11 @@ public class BluetoothClient extends Thread {
                 bytes = inputStream.read(buffer);
                 String received = new String(buffer, 0, bytes);
                 Log.i(TAG, "Received data: " + received);
+
+                if(received.length()<=1){
+                    Log.i(TAG, "Received Data length is less than or equal to 1");
+                    return;
+                }
 
                 if(onDataReceivedListener != null){
                     ((Activity) context).runOnUiThread(new Runnable() {
@@ -195,7 +200,7 @@ public class BluetoothClient extends Thread {
                     // Update the timestamp here
                     timeStamp = new SimpleDateFormat("dd/MM/yyyy HH.mm.ss").format(new Date());
 
-                    sendData("reconnected: " + timeStamp);
+                    sendData("Device Reconnected: " + timeStamp);
                     Log.i(TAG,"reconnected send data: " +timeStamp);
                 }
                 break;

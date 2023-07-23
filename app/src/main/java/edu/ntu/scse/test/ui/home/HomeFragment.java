@@ -171,45 +171,27 @@ public class HomeFragment extends Fragment {
         });
 
         upArrowButton.setOnClickListener(view -> {
-            if(MainActivity.bluetoothClient != null){
-                MainActivity.bluetoothClient.sendData("Arrow Up");
-            }
             moveRobotUp();
         });
         downArrowButton.setOnClickListener(view -> {
-            if(MainActivity.bluetoothClient != null) {
-                MainActivity.bluetoothClient.sendData("Arrow Down");
-            }
             moveRobotDown();
         });
         upRightArrowButton.setOnClickListener(view -> {
-            if(MainActivity.bluetoothClient != null) {
-                MainActivity.bluetoothClient.sendData("Arrow Up Right");
-            }
             moveRobotUpRight();
         });
         upleftArrowButton.setOnClickListener(view -> {
-            if(MainActivity.bluetoothClient != null) {
-                MainActivity.bluetoothClient.sendData("Arrow Up Left");
-            }
             moveRobotUpLeft();
         });
         downRightArrowButton.setOnClickListener(view -> {
-            if(MainActivity.bluetoothClient != null) {
-                MainActivity.bluetoothClient.sendData("Arrow Down Right");
-            }
             moveRobotBottomRight();
         });
         downLeftArrowButton.setOnClickListener(view -> {
-            if(MainActivity.bluetoothClient != null) {
-                MainActivity.bluetoothClient.sendData("Arrow Down Left");
-            }
             moveRobotBottomLeft();
         });
 
         captureButton.setOnClickListener(view -> {
             if(MainActivity.bluetoothClient != null) {
-                MainActivity.bluetoothClient.sendData("Capture");
+                MainActivity.bluetoothClient.sendData("SN");
             }
         });
         /*
@@ -421,8 +403,8 @@ public class HomeFragment extends Fragment {
             public void onClick(View v) {
                 String dataToSend = sendDataTextArea.getText().toString();
                 if (!dataToSend.isEmpty() && MainActivity.bluetoothClient != null) {
-                    if(dataToSend.toLowerCase().startsWith("setup:")){
-                        //setup:{obstacles:[{x:1,y:1,d:0,id:1},{x:2,y:2,d:2,id:2},{x:3,y:3,d:4,id:3},{x:4,y:4,d:6,id:4},{x:5,y:5,d:0,id:5}],robot_row:10,robot_col:10,robot_dir:0}
+                    if(dataToSend.toLowerCase().startsWith("start")){
+                        //start{obstacles:[{x:1,y:1,d:0,id:1},{x:2,y:2,d:2,id:2},{x:3,y:3,d:4,id:3},{x:4,y:4,d:6,id:4},{x:5,y:5,d:0,id:5}],robot_row:10,robot_col:10,robot_dir:0}
                         MainActivity.bluetoothClient.sendData(createSetUpJson(obstacles,myRobot));
                     }else {
                         MainActivity.bluetoothClient.sendData(dataToSend);
@@ -581,9 +563,6 @@ public class HomeFragment extends Fragment {
             FrameLayout frameLayout = frameLayouts[obstacle.getRow()][obstacle.getCol()];
             TextView textView = (TextView) frameLayout.getChildAt(1);  // get the TextView
             textView.setVisibility(View.INVISIBLE);  // make it invisible
-            if(MainActivity.bluetoothClient != null){
-                MainActivity.bluetoothClient.sendData("Obstacle removed: " +obstacle.toString());
-            }
             currentObstacle = null;
         }
         if (myRobot != null && row >= myRobot.getRow() - 1 && row <= myRobot.getRow() + 1
@@ -661,9 +640,6 @@ public class HomeFragment extends Fragment {
         myRobot.setRow(row);
         myRobot.setCol(col);
         Log.d("placeRobot2","placeRobot: "+ myRobot.toString());
-        if(MainActivity.bluetoothClient != null){
-            MainActivity.bluetoothClient.sendData("placeRobot: " + myRobot.toString());
-        }
     }
     private void rotateRobot() {
         myRobot.rotate();
@@ -703,6 +679,7 @@ public class HomeFragment extends Fragment {
                     if(myRobot.getCol() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol() + 1)) {
                         placeRobot(myRobot.getRow(), myRobot.getCol()+1, myRobot.getDirection());
                         Log.i("moveRobotUp case 0", "Robot: " + myRobot.toString());
+                        sendFW();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
                     }
@@ -711,6 +688,7 @@ public class HomeFragment extends Fragment {
                     if(myRobot.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
                         placeRobot(myRobot.getRow()+1, myRobot.getCol(), myRobot.getDirection());
                         Log.i("moveRobotUp case 2", "Robot: " + myRobot.toString());
+                        sendFW();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
                     }
@@ -719,6 +697,7 @@ public class HomeFragment extends Fragment {
                     if(myRobot.getCol() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol()-1)) {
                         placeRobot(myRobot.getRow(), myRobot.getCol()-1, myRobot.getDirection());
                         Log.i("moveRobotUp case 4", "Robot: " + myRobot.toString());
+                        sendFW();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
                     }
@@ -727,6 +706,7 @@ public class HomeFragment extends Fragment {
                     if(myRobot.getRow() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol())) {
                         placeRobot(myRobot.getRow()-1, myRobot.getCol(), myRobot.getDirection());
                         Log.i("moveRobotUp case 6", "Robot: " + myRobot.toString());
+                        sendFW();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be move up.", Toast.LENGTH_SHORT).show();
                     }
@@ -747,6 +727,7 @@ public class HomeFragment extends Fragment {
                     if(myRobot.getCol() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol()-1)) {
                         placeRobot(myRobot.getRow(), myRobot.getCol()-1, myRobot.getDirection());
                         Log.i("moveRobotDown case 0", "Robot: " + myRobot.toString());
+                        sendBW();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be move down.", Toast.LENGTH_SHORT).show();
                     }
@@ -755,6 +736,7 @@ public class HomeFragment extends Fragment {
                     if(myRobot.getRow() - 1 >= 0 && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol())) {
                         placeRobot(myRobot.getRow()-1, myRobot.getCol(), myRobot.getDirection());
                         Log.i("moveRobotDown case 2", "Robot: " + myRobot.toString());
+                        sendBW();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be move down.", Toast.LENGTH_SHORT).show();
                     }
@@ -763,12 +745,14 @@ public class HomeFragment extends Fragment {
                     if(myRobot.getCol() + 1 < gridSize  && !isAreaOccupiedByObstacle(myRobot.getRow(), myRobot.getCol()+1)) {
                         placeRobot(myRobot.getRow(), myRobot.getCol()+1, myRobot.getDirection());
                         Log.i("moveRobotDown case 4", "Robot: " + myRobot.toString());
+                        sendBW();
                     }
                     break;
                 case 6:
                     if(myRobot.getRow() + 1 < gridSize && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol())) {
                         placeRobot(myRobot.getRow()+1, myRobot.getCol(), myRobot.getDirection());
                         Log.i("moveRobotDown case 6", "Robot: " + myRobot.toString());
+                        sendBW();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be move down.", Toast.LENGTH_SHORT).show();
                     }
@@ -812,6 +796,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()+1)){
                         placeRobot(myRobot.getRow()+3, myRobot.getCol()+1, myRobot.getDirection()+2);
                         Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                        sendFR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
                     }
@@ -821,6 +806,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()-3)){
                         placeRobot(myRobot.getRow()+1, myRobot.getCol()-3, myRobot.getDirection()+2);
                         Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                        sendFR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
                     }
@@ -830,6 +816,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()-1)){
                         placeRobot(myRobot.getRow()-3, myRobot.getCol()-1, myRobot.getDirection()+2);
                         Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                        sendFR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
                     }
@@ -839,6 +826,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()+3)){
                         placeRobot(myRobot.getRow()-1, myRobot.getCol()+3, 0);
                         Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                        sendFR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up right.", Toast.LENGTH_SHORT).show();
                     }
@@ -859,6 +847,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()+1)){
                         placeRobot(myRobot.getRow()-3, myRobot.getCol()+1, 6);
                         Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                        sendFL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
                     }
@@ -868,6 +857,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()+3)){
                         placeRobot(myRobot.getRow()+1, myRobot.getCol()+3, myRobot.getDirection()-2);
                         Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                        sendFL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
                     }
@@ -877,6 +867,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()-1)){
                         placeRobot(myRobot.getRow()+3, myRobot.getCol()-1, myRobot.getDirection()-2);
                         Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                        sendFL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
                     }
@@ -886,6 +877,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()-3)){
                         placeRobot(myRobot.getRow()-1, myRobot.getCol()-3, myRobot.getDirection()-2);
                         Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                        sendFL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved up left.", Toast.LENGTH_SHORT).show();
                     }
@@ -906,6 +898,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()-3)){
                         placeRobot(myRobot.getRow()+1, myRobot.getCol()-3, 6);
                         Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                        sendBR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
                     }
@@ -915,6 +908,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()-1)){
                         placeRobot(myRobot.getRow()-3, myRobot.getCol()-1, myRobot.getDirection()-2);
                         Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                        sendBR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
                     }
@@ -924,6 +918,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()+3)){
                         placeRobot(myRobot.getRow()-1, myRobot.getCol()+3, myRobot.getDirection()-2);
                         Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                        sendBR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
                     }
@@ -933,6 +928,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()+1)){
                         placeRobot(myRobot.getRow()+3, myRobot.getCol()+1, myRobot.getDirection()-2);
                         Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                        sendBR();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom right.", Toast.LENGTH_SHORT).show();
                     }
@@ -953,6 +949,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-1, myRobot.getCol()-3)){
                         placeRobot(myRobot.getRow()-1, myRobot.getCol()-3, myRobot.getDirection()+2);
                         Log.i("moveRobotUpRight case 0", "Robot: " + myRobot.toString());
+                        sendBL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
                     }
@@ -962,6 +959,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()-3, myRobot.getCol()+1)){
                         placeRobot(myRobot.getRow()-3, myRobot.getCol()+1, myRobot.getDirection()+2);
                         Log.i("moveRobotUpRight case 2", "Robot: " + myRobot.toString());
+                        sendBL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
                     }
@@ -971,6 +969,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+1, myRobot.getCol()+3)){
                         placeRobot(myRobot.getRow()+1, myRobot.getCol()+3, myRobot.getDirection()+2);
                         Log.i("moveRobotUpRight case 4", "Robot: " + myRobot.toString());
+                        sendBL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
                     }
@@ -980,6 +979,7 @@ public class HomeFragment extends Fragment {
                             && !isAreaOccupiedByObstacle(myRobot.getRow()+3, myRobot.getCol()-1)){
                         placeRobot(myRobot.getRow()+3, myRobot.getCol()-1, 0);
                         Log.i("moveRobotUpRight case 6", "Robot: " + myRobot.toString());
+                        sendBL();
                     }else{
                         Toast.makeText(getContext(), "The robot cannot be moved bottom left.", Toast.LENGTH_SHORT).show();
                     }
@@ -1026,7 +1026,7 @@ public class HomeFragment extends Fragment {
         }
         return false;
     }
-
+/*
     private String getTextBeforeColon(String input) {
         int colonIndex = input.indexOf(':');
         if (colonIndex != -1) {
@@ -1034,7 +1034,38 @@ public class HomeFragment extends Fragment {
         }
         return input;
     }
+*/
+    private void sendFL(){
+        if(MainActivity.bluetoothClient != null) {
+            MainActivity.bluetoothClient.sendData("FL");
+        }
+    }
 
+    private void sendFW(){
+        if(MainActivity.bluetoothClient != null){
+            MainActivity.bluetoothClient.sendData("FW");
+        }
+    }
+    private void sendFR(){
+        if(MainActivity.bluetoothClient != null) {
+            MainActivity.bluetoothClient.sendData("FR");
+        }
+    }
+    private void sendBL(){
+        if(MainActivity.bluetoothClient != null) {
+            MainActivity.bluetoothClient.sendData("BL");
+        }
+    }
+    private void sendBW(){
+        if(MainActivity.bluetoothClient != null) {
+            MainActivity.bluetoothClient.sendData("BW");
+        }
+    }
+    private void sendBR() {
+        if (MainActivity.bluetoothClient != null) {
+            MainActivity.bluetoothClient.sendData("BR");
+        }
+    }
     public String createSetUpJson(List<Obstacle> obstacles, Robot robot) {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
@@ -1061,64 +1092,76 @@ public class HomeFragment extends Fragment {
         return jsonObject.toString();
     }
     public void updateReceivedData(String data){
-        String prefix = getTextBeforeColon(data);
-        String[] splitString = null;
-        Log.d(TAG,"prefix: " +prefix);
-        if(!data.isEmpty() && data.contains(",")){
+        try {
+            String[] splitString = null;
+            String[] splitStringPipe = null;
+            String[] splitStringPipeData = null;
+
             splitString = data.split(",");
+            splitStringPipe = data.split("\\|");
             //for loop for testing purpose...
-            for (String aa : splitString) {
-                Log.d(TAG,"splitString: " +aa.trim());
+            for (String receivedData : splitString) {
+                Log.d(TAG,"splitString: " +receivedData.trim());
             }
-        }
-        switch (prefix) {
-            case "status":
-                //tested using "status:test"
-                data = data.substring(data.indexOf(":") + 1).trim();
-                statusTextArea.setText(data);
-                break;
-            case "robot":
-                //tested using "robot:,5,6,0"
-                if (splitString != null) {
-                    int xCoor = Integer.parseInt(splitString[1].trim());
-                    int yCoor = Integer.parseInt(splitString[2].trim());
-                    int direction = Integer.parseInt(splitString[3].trim());
+
+            if (splitString != null) {
+                int direction = Integer.parseInt(splitString[0].trim());
+                int xCoor = Integer.parseInt(splitString[1].trim());
+                int yCoor = Integer.parseInt(splitString[2].trim());
+                int snapStatus = Integer.parseInt(splitString[3].trim());
+                Log.d(TAG,"direction: " +direction);
+                Log.d(TAG,"xCoor: " +xCoor);
+                Log.d(TAG,"yCoor: " +yCoor);
+                Log.d(TAG,"snapStatus: " +snapStatus);
+                if(snapStatus != -1){
+                    statusTextArea.setText("Snapping");
+                }else{
+                    statusTextArea.setText("Moving");
+                }
+                if(xCoor!=0 && yCoor!=0 && direction!=0){
                     placeRobot(xCoor,yCoor,direction);
                 }
-                break;
-            case "obstacle":
-                //tested using "obstacle:,1,6"
-                //Displaying Image Target ID on Obstacle Blocks in the Map.
-                //TARGET, <Obstacle Number>, <Target ID>”.
-                //obstacle number == current obstacle ID
-                //Target ID == imageId
-                Log.d(TAG,"Received Data for obstacle: " +data);
-                if (splitString != null) {
-                    //missign rol,col,direction
-                    int obstacleNum = Integer.parseInt(splitString[1].trim());
-                    int tagetId = Integer.parseInt(splitString[2].trim());
-                    //get obstacle based on the obstacleNum, set and display ImgId
-                    Log.d(TAG,"obstacleNum: " +obstacleNum);
-                    Log.d(TAG,"tagetId: " +tagetId);
 
-                    for (Obstacle obstacle : obstacles) {
-                        if (obstacle.getId() == obstacleNum) {
-                            obstacle.setImageId(tagetId);
 
-                            FrameLayout frameLayout = frameLayouts[obstacle.getRow()][obstacle.getCol()];
-                            imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle", obstacle.getDirection()));
-                            Log.i(TAG, "Obstacle Obj: " + obstacle.toString());
-                            TextView textView = (TextView) frameLayout.getChildAt(1);  // get the TextView
-                            textView.setText(String.valueOf(obstacle.getImageId()));
-                            textView.setTextColor(Color.GREEN);
-                            textView.setVisibility(View.VISIBLE);  // make it visible
+                receivedDataTextArea.setText(xCoor+","+yCoor+","+direction);
+            }
+            if(splitStringPipe != null){
+                String stringAfterPipe = splitStringPipe[1];
+                splitStringPipeData = stringAfterPipe.split(",");
+                List<Integer> obstacleIDArr =  new ArrayList<>();
+                List<Integer>imgIDArr = new ArrayList<>();
+                if(splitStringPipeData!=null){
+                    for(int i=0;i<splitStringPipeData.length;i++){
+                        if(i%2==0){
+                            //even -> obs id
+                            obstacleIDArr.add(Integer.parseInt(splitStringPipeData[i]));
+                        }else{
+                            //odd -> obs img id
+                            imgIDArr.add(Integer.parseInt(splitStringPipeData[i]));
+                        }
+                    }
 
+                    //loop obs
+                    for(int i=0; i<obstacleIDArr.size();i++){
+                        for (Obstacle obstacle : obstacles) {
+                            if (obstacle.getId() == obstacleIDArr.get(i)) {
+                                obstacle.setImageId(imgIDArr.get(i));
+
+                                FrameLayout frameLayout = frameLayouts[obstacle.getRow()][obstacle.getCol()];
+                                imageViews[obstacle.getRow()][obstacle.getCol()].setImageResource(getDrawableForDirection("obstacle", obstacle.getDirection()));
+                                Log.i(TAG, "Obstacle Obj: " + obstacle.toString());
+                                TextView textView = (TextView) frameLayout.getChildAt(1);  // get the TextView
+                                textView.setText(String.valueOf(obstacle.getImageId()));
+                                textView.setTextColor(Color.GREEN);
+                                textView.setVisibility(View.VISIBLE);  // make it visible
+                            }
                         }
                     }
                 }
-                break;
-            default:
-                receivedDataTextArea.setText(data);
+            }
+        }catch (ArrayIndexOutOfBoundsException e){
+            //Toast.makeText(getContext(), "Unable to update received data...", Toast.LENGTH_SHORT).show();
+            Log.d(TAG,"updateReceivedData:" +e);
         }
     }
 }
